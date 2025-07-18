@@ -1,0 +1,63 @@
+model Team {
+    id            String          @id @default(uuid())
+    name          String
+    description   String?
+    createdAt     DateTime        @default(now())
+    updatedAt     DateTime        @updatedAt
+    tasks         Task[]
+    TeamMember    TeamMember[]
+    Documentation Documentation[]
+}
+
+model TeamMember {
+    id                String              @id @default(uuid())
+    teamId            String
+    team              Team                @relation(fields: [teamId], references: [id])
+    responsibilities  String[]
+    skills            String[]
+    createdAt         DateTime            @default(now())
+    updatedAt         DateTime            @updatedAt
+    TeamMemberTask    TeamMemberTask[]
+    TeamMemberWorklog TeamMemberWorklog[]
+    MemberActivity    MemberActivity[]
+}
+
+model TeamMemberTask {
+    id           String     @id @default(uuid())
+    teamMemberId String
+    teamMember   TeamMember @relation(fields: [teamMemberId], references: [id])
+    taskId       String
+    task         Task       @relation(fields: [taskId], references: [id])
+    status       String     @default("todo") // todo, in_progress, testing, done
+    createdAt    DateTime   @default(now())
+    updatedAt    DateTime   @updatedAt
+}
+
+model TeamMemberWorklog {
+    id           String     @id @default(uuid())
+    teamMemberId String
+    teamMember   TeamMember @relation(fields: [teamMemberId], references: [id])
+    taskId       String
+    task         Task       @relation(fields: [taskId], references: [id])
+    content      String?
+    createdAt    DateTime   @default(now())
+    updatedAt    DateTime   @updatedAt
+}
+
+model TaskActivity {
+    id        String   @id @default(uuid())
+    taskId    String
+    task      Task     @relation(fields: [taskId], references: [id])
+    body      String
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model MemberActivity {
+    id           String     @id @default(uuid())
+    teamMemberId String
+    teamMember   TeamMember @relation(fields: [teamMemberId], references: [id])
+    body         String
+    createdAt    DateTime   @default(now())
+    updatedAt    DateTime   @updatedAt
+}
