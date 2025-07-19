@@ -1,0 +1,13 @@
+{
+    "mcpServers": {
+        "ateam": {
+            "command": "node",
+            "args": [
+                "dist/mcp/index.js"
+            ],
+            "env": {
+                "DATABASE_URL": "postgresql://username:password@localhost:5432/ateam"
+            }
+        }
+    }
+}

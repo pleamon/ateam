@@ -1,0 +1,1176 @@
+import { PrismaClient } from '../../generated/prisma';
+import { z } from 'zod';
+
+const prisma = new PrismaClient();
+
+// 请求验证schema
+const createDocumentationSchema = z.object({
+    projectId: z.string().min(1, '项目ID不能为空'),
+    teamId: z.string().min(1, '团队ID不能为空'),
+    name: z.string().min(1, '文档名称不能为空'),
+    content: z.string().min(1, '文档内容不能为空'),
+    type: z.enum(['overview', 'technical', 'design', 'research', 'other']).default('overview'),
+    url: z.string().url().optional(),
+});
+
+const updateDocumentationSchema = z.object({
+    name: z.string().min(1, '文档名称不能为空').optional(),
+    content: z.string().min(1, '文档内容不能为空').optional(),
+    type: z.enum(['overview', 'technical', 'design', 'research', 'other']).optional(),
+    url: z.string().url().optional(),
+});
+
+const createRequirementSchema = z.object({
+    projectId: z.string().min(1, '项目ID不能为空'),
+    content: z.string().min(1, '需求内容不能为空'),
+});
+
+const createRequirementQuestionSchema = z.object({
+    projectId: z.string().min(1, '项目ID不能为空'),
+    question: z.string().min(1, '问题不能为空'),
+    answer: z.string().optional(),
+    status: z.enum(['todo', 'in_progress', 'done']).default('todo'),
+    clarified: z.boolean().default(false),
+});
+
+const createDomainKnowledgeSchema = z.object({
+    projectId: z.string().min(1, '项目ID不能为空'),
+    domain: z.string().min(1, '领域名称不能为空'),
+    concepts: z.array(z.string()).optional(),
+    commonPatterns: z.array(z.string()).optional(),
+    bestPractices: z.array(z.string()).optional(),
+    antiPatterns: z.array(z.string()).optional(),
+});
+
+const createMindMapSchema = z.object({
+    projectId: z.string().min(1, '项目ID不能为空'),
+    content: z.string().min(1, '脑图内容不能为空'),
+    // 脑图数据结构：包含节点信息、连接关系等
+    nodes: z.array(z.object({
+        id: z.string(),
+        text: z.string(),
+        parentId: z.string().nullable(),
+        position: z.object({
+            x: z.number(),
+            y: z.number(),
+        }).optional(),
+        style: z.object({
+            color: z.string().optional(),
+            fontSize: z.number().optional(),
+            backgroundColor: z.string().optional(),
+        }).optional(),
+        children: z.array(z.string()).optional(),
+    })).optional(),
+    // 保留原始 content 字段用于存储序列化的脑图数据
+});
+
+const updateMindMapSchema = z.object({
+    content: z.string().min(1, '脑图内容不能为空').optional(),
+    nodes: z.array(z.object({
+        id: z.string(),
+        text: z.string(),
+        parentId: z.string().nullable(),
+        position: z.object({
+            x: z.number(),
+            y: z.number(),
+        }).optional(),
+        style: z.object({
+            color: z.string().optional(),
+            fontSize: z.number().optional(),
+            backgroundColor: z.string().optional(),
+        }).optional(),
+        children: z.array(z.string()).optional(),
+    })).optional(),
+});
+
+const createSystemArchitectureSchema = z.object({
+    projectId: z.string().min(1, '项目ID不能为空'),
+    overview: z.string().min(1, '技术架构总览不能为空'),
+    platforms: z.array(z.string()),
+    components: z.array(z.string()),
+    technologies: z.array(z.string()),
+    diagrams: z.string().optional(),
+    notes: z.string().optional(),
+});
+
+const updateSystemArchitectureSchema = z.object({
+    overview: z.string().optional(),
+    platforms: z.array(z.string()).optional(),
+    components: z.array(z.string()).optional(),
+    technologies: z.array(z.string()).optional(),
+    diagrams: z.string().optional(),
+    notes: z.string().optional(),
+});
+
+const createPlatformArchitectureSchema = z.object({
+    systemArchitectureId: z.string().min(1, '系统架构ID不能为空'),
+    platform: z.string().min(1, '平台名称不能为空'),
+    frontend: z.string().optional(),
+    backend: z.string().optional(),
+    technologies: z.array(z.string()),
+    components: z.array(z.string()),
+    diagrams: z.string().optional(),
+    notes: z.string().optional(),
+});
+
+const updatePlatformArchitectureSchema = z.object({
+    platform: z.string().optional(),
+    frontend: z.string().optional(),
+    backend: z.string().optional(),
+    technologies: z.array(z.string()).optional(),
+    components: z.array(z.string()).optional(),
+    diagrams: z.string().optional(),
+    notes: z.string().optional(),
+});
+
+const createApiDesignSchema = z.object({
+    projectId: z.string().min(1, '项目ID不能为空'),
+    platform: z.string().min(1, '平台不能为空'),
+    apiName: z.string().min(1, 'API名称不能为空'),
+    apiPath: z.string().min(1, 'API路径不能为空'),
+    apiMethod: z.enum(['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD']).default('GET'),
+    apiContentType: z.enum(['application/json', 'application/xml', 'application/x-www-form-urlencoded', 'multipart/form-data', 'text/plain']).default('application/json'),
+    apiDescription: z.string().min(1, 'API描述不能为空'),
+    requestFields: z.string().min(1, '请求字段不能为空'),
+    responseFields: z.string().min(1, '响应字段不能为空'),
+});
+
+const updateApiDesignSchema = z.object({
+    platform: z.string().optional(),
+    apiName: z.string().optional(),
+    apiPath: z.string().optional(),
+    apiMethod: z.enum(['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD']).optional(),
+    apiContentType: z.enum(['application/json', 'application/xml', 'application/x-www-form-urlencoded', 'multipart/form-data', 'text/plain']).optional(),
+    apiDescription: z.string().optional(),
+    requestFields: z.string().optional(),
+    responseFields: z.string().optional(),
+});
+
+const createDataStructureSchema = z.object({
+    projectId: z.string().min(1, '项目ID不能为空'),
+    schemaName: z.string().min(1, 'Schema名称不能为空'),
+    tableName: z.string().min(1, '表名不能为空'),
+    columnName: z.string().min(1, '列名不能为空'),
+    columnType: z.string().min(1, '列类型不能为空'),
+    columnDescription: z.string().min(1, '列描述不能为空'),
+    columnDefaultValue: z.string(),
+    columnIsNullable: z.boolean(),
+    columnIsUnique: z.boolean(),
+    columnIsPrimaryKey: z.boolean(),
+    columnIsForeignKey: z.boolean(),
+});
+
+const updateDataStructureSchema = z.object({
+    schemaName: z.string().optional(),
+    tableName: z.string().optional(),
+    columnName: z.string().optional(),
+    columnType: z.string().optional(),
+    columnDescription: z.string().optional(),
+    columnDefaultValue: z.string().optional(),
+    columnIsNullable: z.boolean().optional(),
+    columnIsUnique: z.boolean().optional(),
+    columnIsPrimaryKey: z.boolean().optional(),
+    columnIsForeignKey: z.boolean().optional(),
+});
+
+export class DocumentationService {
+    /**
+     * 获取所有文档
+     */
+    static async getAllDocumentation() {
+        try {
+            const documentation = await prisma.documentation.findMany({
+                include: {
+                    project: true,
+                    team: true,
+                },
+            });
+
+            return {
+                success: true,
+                data: documentation,
+            };
+        } catch (error) {
+            throw new Error('获取文档列表失败');
+        }
+    }
+
+    /**
+     * 根据ID获取文档
+     */
+    static async getDocumentationById(id: string) {
+        try {
+            const documentation = await prisma.documentation.findUnique({
+                where: { id },
+                include: {
+                    project: true,
+                    team: true,
+                },
+            });
+
+            if (!documentation) {
+                throw new Error('文档不存在');
+            }
+
+            return {
+                success: true,
+                data: documentation,
+            };
+        } catch (error) {
+            throw new Error('获取文档详情失败');
+        }
+    }
+
+    /**
+     * 创建文档
+     */
+    static async createDocumentation(data: z.infer<typeof createDocumentationSchema>) {
+        try {
+            const validatedData = createDocumentationSchema.parse(data);
+
+            const documentation = await prisma.documentation.create({
+                data: {
+                    projectId: validatedData.projectId,
+                    teamId: validatedData.teamId,
+                    name: validatedData.name,
+                    content: validatedData.content,
+                    type: validatedData.type,
+                    url: validatedData.url,
+                },
+            });
+
+            return {
+                success: true,
+                data: documentation,
+                message: '文档创建成功',
+            };
+        } catch (error) {
+            if (error instanceof z.ZodError) {
+                throw new Error('请求参数错误');
+            }
+            throw new Error('创建文档失败');
+        }
+    }
+
+    /**
+     * 更新文档
+     */
+    static async updateDocumentation(id: string, data: z.infer<typeof updateDocumentationSchema>) {
+        try {
+            const validatedData = updateDocumentationSchema.parse(data);
+
+            const documentation = await prisma.documentation.update({
+                where: { id },
+                data: {
+                    name: validatedData.name,
+                    content: validatedData.content,
+                    type: validatedData.type,
+                    url: validatedData.url,
+                },
+            });
+
+            return {
+                success: true,
+                data: documentation,
+                message: '文档更新成功',
+            };
+        } catch (error) {
+            if (error instanceof z.ZodError) {
+                throw new Error('请求参数错误');
+            }
+            throw new Error('更新文档失败');
+        }
+    }
+
+    /**
+     * 删除文档
+     */
+    static async deleteDocumentation(id: string) {
+        try {
+            await prisma.documentation.delete({
+                where: { id },
+            });
+
+            return {
+                success: true,
+                message: '文档删除成功',
+            };
+        } catch (error) {
+            throw new Error('删除文档失败');
+        }
+    }
+
+    /**
+     * 创建需求
+     */
+    static async createRequirement(data: z.infer<typeof createRequirementSchema>) {
+        try {
+            const validatedData = createRequirementSchema.parse(data);
+
+            const requirement = await prisma.requirement.create({
+                data: {
+                    projectId: validatedData.projectId,
+                    content: validatedData.content,
+                },
+            });
+
+            return {
+                success: true,
+                data: requirement,
+                message: '需求创建成功',
+            };
+        } catch (error) {
+            if (error instanceof z.ZodError) {
+                throw new Error('请求参数错误');
+            }
+            throw new Error('创建需求失败');
+        }
+    }
+
+    /**
+     * 获取项目需求
+     */
+    static async getProjectRequirements(projectId: string) {
+        try {
+            const requirements = await prisma.requirement.findMany({
+                where: { projectId },
+                include: {
+                    project: true,
+                },
+            });
+
+            return {
+                success: true,
+                data: requirements,
+            };
+        } catch (error) {
+            throw new Error('获取项目需求失败');
+        }
+    }
+
+    /**
+     * 创建需求问题
+     */
+    static async createRequirementQuestion(data: z.infer<typeof createRequirementQuestionSchema>) {
+        try {
+            const validatedData = createRequirementQuestionSchema.parse(data);
+
+            const question = await prisma.requirementQuestion.create({
+                data: {
+                    projectId: validatedData.projectId,
+                    question: validatedData.question,
+                    answer: validatedData.answer,
+                    status: validatedData.status,
+                    clarified: validatedData.clarified,
+                },
+            });
+
+            return {
+                success: true,
+                data: question,
+                message: '问题创建成功',
+            };
+        } catch (error) {
+            if (error instanceof z.ZodError) {
+                throw new Error('请求参数错误');
+            }
+            throw new Error('创建问题失败');
+        }
+    }
+
+    /**
+     * 获取项目问题
+     */
+    static async getProjectQuestions(projectId: string) {
+        try {
+            const questions = await prisma.requirementQuestion.findMany({
+                where: { projectId },
+                include: {
+                    project: true,
+                },
+            });
+
+            return {
+                success: true,
+                data: questions,
+            };
+        } catch (error) {
+            throw new Error('获取项目问题失败');
+        }
+    }
+
+    /**
+     * 创建领域知识
+     */
+    static async createDomainKnowledge(data: z.infer<typeof createDomainKnowledgeSchema>) {
+        try {
+            const validatedData = createDomainKnowledgeSchema.parse(data);
+
+            const domainKnowledge = await prisma.domainKnowledge.create({
+                data: {
+                    projectId: validatedData.projectId,
+                    domain: validatedData.domain,
+                    concepts: validatedData.concepts || [],
+                    commonPatterns: validatedData.commonPatterns || [],
+                    bestPractices: validatedData.bestPractices || [],
+                    antiPatterns: validatedData.antiPatterns || [],
+                },
+            });
+
+            return {
+                success: true,
+                data: domainKnowledge,
+                message: '领域知识创建成功',
+            };
+        } catch (error) {
+            if (error instanceof z.ZodError) {
+                throw new Error('请求参数错误');
+            }
+            throw new Error('创建领域知识失败');
+        }
+    }
+
+    /**
+     * 获取项目领域知识
+     */
+    static async getProjectDomainKnowledge(projectId: string) {
+        try {
+            const domainKnowledge = await prisma.domainKnowledge.findMany({
+                where: { projectId },
+                include: {
+                    project: true,
+                },
+            });
+
+            return {
+                success: true,
+                data: domainKnowledge,
+            };
+        } catch (error) {
+            throw new Error('获取项目领域知识失败');
+        }
+    }
+
+    /**
+     * 获取文档统计信息
+     */
+    static async getDocumentationStats(projectId?: string) {
+        try {
+            const whereClause = projectId ? { projectId } : {};
+
+            const [totalDocs, overviewDocs, technicalDocs, designDocs] = await Promise.all([
+                prisma.documentation.count({ where: whereClause }),
+                prisma.documentation.count({ where: { ...whereClause, type: 'overview' } }),
+                prisma.documentation.count({ where: { ...whereClause, type: 'technical' } }),
+                prisma.documentation.count({ where: { ...whereClause, type: 'design' } }),
+            ]);
+
+            return {
+                success: true,
+                data: {
+                    totalDocs,
+                    overviewDocs,
+                    technicalDocs,
+                    designDocs,
+                },
+            };
+        } catch (error) {
+            throw new Error('获取文档统计信息失败');
+        }
+    }
+
+    /**
+     * 创建脑图 (MindMap)
+     */
+    static async createMindMap(data: z.infer<typeof createMindMapSchema>) {
+        try {
+            const validatedData = createMindMapSchema.parse(data);
+
+            // 如果提供了 nodes，将其序列化为 content
+            let content = validatedData.content;
+            if (validatedData.nodes && validatedData.nodes.length > 0) {
+                content = JSON.stringify({
+                    nodes: validatedData.nodes,
+                    version: '1.0',
+                    type: 'mindmap',
+                });
+            }
+
+            const mindmap = await prisma.minimap.create({
+                data: {
+                    projectId: validatedData.projectId,
+                    content: content,
+                },
+            });
+
+            return {
+                success: true,
+                data: mindmap,
+                message: '脑图创建成功',
+            };
+        } catch (error) {
+            if (error instanceof z.ZodError) {
+                throw new Error('请求参数错误');
+            }
+            throw new Error('创建脑图失败');
+        }
+    }
+
+    /**
+     * 获取项目脑图 (MindMap)
+     */
+    static async getProjectMindMap(projectId: string) {
+        try {
+            const mindmap = await prisma.minimap.findFirst({
+                where: { projectId },
+                include: {
+                    project: true,
+                },
+            });
+
+            // 如果 content 是 JSON 格式，尝试解析
+            if (mindmap && mindmap.content) {
+                try {
+                    const parsedContent = JSON.parse(mindmap.content);
+                    if (parsedContent.type === 'mindmap' && parsedContent.nodes) {
+                        return {
+                            success: true,
+                            data: {
+                                ...mindmap,
+                                nodes: parsedContent.nodes,
+                                parsedContent: parsedContent,
+                            },
+                        };
+                    }
+                } catch (e) {
+                    // 如果解析失败，返回原始数据
+                }
+            }
+
+            return {
+                success: true,
+                data: mindmap,
+            };
+        } catch (error) {
+            throw new Error('获取项目脑图失败');
+        }
+    }
+
+    /**
+     * 更新脑图 (MindMap)
+     */
+    static async updateMindMap(id: string, data: z.infer<typeof updateMindMapSchema>) {
+        try {
+            const validatedData = updateMindMapSchema.parse(data);
+
+            // 如果提供了 nodes，将其序列化为 content
+            let content = validatedData.content;
+            if (validatedData.nodes && validatedData.nodes.length > 0) {
+                content = JSON.stringify({
+                    nodes: validatedData.nodes,
+                    version: '1.0',
+                    type: 'mindmap',
+                });
+            }
+
+            const mindmap = await prisma.minimap.update({
+                where: { id },
+                data: {
+                    content: content,
+                },
+            });
+
+            return {
+                success: true,
+                data: mindmap,
+                message: '脑图更新成功',
+            };
+        } catch (error) {
+            if (error instanceof z.ZodError) {
+                throw new Error('请求参数错误');
+            }
+            throw new Error('更新脑图失败');
+        }
+    }
+
+    /**
+     * 删除脑图 (MindMap)
+     */
+    static async deleteMindMap(id: string) {
+        try {
+            await prisma.minimap.delete({
+                where: { id },
+            });
+
+            return {
+                success: true,
+                message: '脑图删除成功',
+            };
+        } catch (error) {
+            throw new Error('删除脑图失败');
+        }
+    }
+
+    /**
+     * 创建系统架构
+     */
+    static async createSystemArchitecture(data: z.infer<typeof createSystemArchitectureSchema>) {
+        try {
+            const validatedData = createSystemArchitectureSchema.parse(data);
+
+            const systemArchitecture = await prisma.systemArchitecture.create({
+                data: {
+                    projectId: validatedData.projectId,
+                    overview: validatedData.overview,
+                    platforms: validatedData.platforms || [],
+                    components: validatedData.components || [],
+                    technologies: validatedData.technologies || [],
+                    diagrams: validatedData.diagrams,
+                    notes: validatedData.notes,
+                },
+            });
+
+            return {
+                success: true,
+                data: systemArchitecture,
+                message: '系统架构创建成功',
+            };
+        } catch (error) {
+            if (error instanceof z.ZodError) {
+                throw new Error('请求参数错误');
+            }
+            throw new Error('创建系统架构失败');
+        }
+    }
+
+    /**
+     * 获取项目系统架构
+     */
+    static async getProjectSystemArchitecture(projectId: string) {
+        try {
+            const systemArchitecture = await prisma.systemArchitecture.findFirst({
+                where: { projectId },
+                include: {
+                    project: true,
+                    platformArchitectures: true,
+                },
+            });
+
+            return {
+                success: true,
+                data: systemArchitecture,
+            };
+        } catch (error) {
+            throw new Error('获取项目系统架构失败');
+        }
+    }
+
+    /**
+     * 更新系统架构
+     */
+    static async updateSystemArchitecture(id: string, data: z.infer<typeof updateSystemArchitectureSchema>) {
+        try {
+            const validatedData = updateSystemArchitectureSchema.parse(data);
+
+            const systemArchitecture = await prisma.systemArchitecture.update({
+                where: { id },
+                data: {
+                    overview: validatedData.overview,
+                    platforms: validatedData.platforms,
+                    components: validatedData.components,
+                    technologies: validatedData.technologies,
+                    diagrams: validatedData.diagrams,
+                    notes: validatedData.notes,
+                },
+            });
+
+            return {
+                success: true,
+                data: systemArchitecture,
+                message: '系统架构更新成功',
+            };
+        } catch (error) {
+            if (error instanceof z.ZodError) {
+                throw new Error('请求参数错误');
+            }
+            throw new Error('更新系统架构失败');
+        }
+    }
+
+    /**
+     * 删除系统架构
+     */
+    static async deleteSystemArchitecture(id: string) {
+        try {
+            await prisma.systemArchitecture.delete({
+                where: { id },
+            });
+
+            return {
+                success: true,
+                message: '系统架构删除成功',
+            };
+        } catch (error) {
+            throw new Error('删除系统架构失败');
+        }
+    }
+
+    /**
+     * 创建平台架构
+     */
+    static async createPlatformArchitecture(data: z.infer<typeof createPlatformArchitectureSchema>) {
+        try {
+            const validatedData = createPlatformArchitectureSchema.parse(data);
+
+            const platformArchitecture = await prisma.platformArchitecture.create({
+                data: {
+                    systemArchitectureId: validatedData.systemArchitectureId,
+                    platform: validatedData.platform,
+                    frontend: validatedData.frontend,
+                    backend: validatedData.backend,
+                    technologies: validatedData.technologies || [],
+                    components: validatedData.components || [],
+                    diagrams: validatedData.diagrams,
+                    notes: validatedData.notes,
+                },
+            });
+
+            return {
+                success: true,
+                data: platformArchitecture,
+                message: '平台架构创建成功',
+            };
+        } catch (error) {
+            if (error instanceof z.ZodError) {
+                throw new Error('请求参数错误');
+            }
+            throw new Error('创建平台架构失败');
+        }
+    }
+
+    /**
+     * 获取系统架构的平台架构列表
+     */
+    static async getSystemPlatformArchitectures(systemArchitectureId: string) {
+        try {
+            const platformArchitectures = await prisma.platformArchitecture.findMany({
+                where: { systemArchitectureId },
+                include: {
+                    systemArchitecture: true,
+                },
+            });
+
+            return {
+                success: true,
+                data: platformArchitectures,
+            };
+        } catch (error) {
+            throw new Error('获取平台架构列表失败');
+        }
+    }
+
+    /**
+     * 更新平台架构
+     */
+    static async updatePlatformArchitecture(id: string, data: z.infer<typeof updatePlatformArchitectureSchema>) {
+        try {
+            const validatedData = updatePlatformArchitectureSchema.parse(data);
+
+            const platformArchitecture = await prisma.platformArchitecture.update({
+                where: { id },
+                data: {
+                    platform: validatedData.platform,
+                    frontend: validatedData.frontend,
+                    backend: validatedData.backend,
+                    technologies: validatedData.technologies,
+                    components: validatedData.components,
+                    diagrams: validatedData.diagrams,
+                    notes: validatedData.notes,
+                },
+            });
+
+            return {
+                success: true,
+                data: platformArchitecture,
+                message: '平台架构更新成功',
+            };
+        } catch (error) {
+            if (error instanceof z.ZodError) {
+                throw new Error('请求参数错误');
+            }
+            throw new Error('更新平台架构失败');
+        }
+    }
+
+    /**
+     * 删除平台架构
+     */
+    static async deletePlatformArchitecture(id: string) {
+        try {
+            await prisma.platformArchitecture.delete({
+                where: { id },
+            });
+
+            return {
+                success: true,
+                message: '平台架构删除成功',
+            };
+        } catch (error) {
+            throw new Error('删除平台架构失败');
+        }
+    }
+
+    /**
+     * 创建API设计
+     */
+    static async createApiDesign(data: z.infer<typeof createApiDesignSchema>) {
+        try {
+            const validatedData = createApiDesignSchema.parse(data);
+
+            const apiDesign = await prisma.apiDesign.create({
+                data: {
+                    projectId: validatedData.projectId,
+                    platform: validatedData.platform,
+                    apiName: validatedData.apiName,
+                    apiPath: validatedData.apiPath,
+                    apiMethod: validatedData.apiMethod,
+                    apiContentType: validatedData.apiContentType,
+                    apiDescription: validatedData.apiDescription,
+                    requestFields: validatedData.requestFields,
+                    responseFields: validatedData.responseFields,
+                },
+            });
+
+            return {
+                success: true,
+                data: apiDesign,
+                message: 'API设计创建成功',
+            };
+        } catch (error) {
+            if (error instanceof z.ZodError) {
+                throw new Error('请求参数错误');
+            }
+            throw new Error('创建API设计失败');
+        }
+    }
+
+    /**
+     * 获取项目API设计列表
+     */
+    static async getProjectApiDesigns(projectId: string) {
+        try {
+            const apiDesigns = await prisma.apiDesign.findMany({
+                where: { projectId },
+                include: {
+                    project: true,
+                },
+            });
+
+            return {
+                success: true,
+                data: apiDesigns,
+            };
+        } catch (error) {
+            throw new Error('获取项目API设计列表失败');
+        }
+    }
+
+    /**
+     * 根据ID获取API设计
+     */
+    static async getApiDesignById(id: string) {
+        try {
+            const apiDesign = await prisma.apiDesign.findUnique({
+                where: { id },
+                include: {
+                    project: true,
+                },
+            });
+
+            if (!apiDesign) {
+                throw new Error('API设计不存在');
+            }
+
+            return {
+                success: true,
+                data: apiDesign,
+            };
+        } catch (error) {
+            throw new Error('获取API设计详情失败');
+        }
+    }
+
+    /**
+     * 更新API设计
+     */
+    static async updateApiDesign(id: string, data: z.infer<typeof updateApiDesignSchema>) {
+        try {
+            const validatedData = updateApiDesignSchema.parse(data);
+
+            const apiDesign = await prisma.apiDesign.update({
+                where: { id },
+                data: {
+                    platform: validatedData.platform,
+                    apiName: validatedData.apiName,
+                    apiPath: validatedData.apiPath,
+                    apiMethod: validatedData.apiMethod,
+                    apiContentType: validatedData.apiContentType,
+                    apiDescription: validatedData.apiDescription,
+                    requestFields: validatedData.requestFields,
+                    responseFields: validatedData.responseFields,
+                },
+            });
+
+            return {
+                success: true,
+                data: apiDesign,
+                message: 'API设计更新成功',
+            };
+        } catch (error) {
+            if (error instanceof z.ZodError) {
+                throw new Error('请求参数错误');
+            }
+            throw new Error('更新API设计失败');
+        }
+    }
+
+    /**
+     * 删除API设计
+     */
+    static async deleteApiDesign(id: string) {
+        try {
+            await prisma.apiDesign.delete({
+                where: { id },
+            });
+
+            return {
+                success: true,
+                message: 'API设计删除成功',
+            };
+        } catch (error) {
+            throw new Error('删除API设计失败');
+        }
+    }
+
+    /**
+     * 按平台获取API设计
+     */
+    static async getApiDesignsByPlatform(projectId: string, platform: string) {
+        try {
+            const apiDesigns = await prisma.apiDesign.findMany({
+                where: { 
+                    projectId,
+                    platform,
+                },
+                include: {
+                    project: true,
+                },
+            });
+
+            return {
+                success: true,
+                data: apiDesigns,
+            };
+        } catch (error) {
+            throw new Error('获取平台API设计失败');
+        }
+    }
+
+    /**
+     * 创建数据结构
+     */
+    static async createDataStructure(data: z.infer<typeof createDataStructureSchema>) {
+        try {
+            const validatedData = createDataStructureSchema.parse(data);
+
+            const dataStructure = await prisma.dataStructure.create({
+                data: {
+                    projectId: validatedData.projectId,
+                    schemaName: validatedData.schemaName,
+                    tableName: validatedData.tableName,
+                    columnName: validatedData.columnName,
+                    columnType: validatedData.columnType,
+                    columnDescription: validatedData.columnDescription,
+                    columnDefaultValue: validatedData.columnDefaultValue,
+                    columnIsNullable: validatedData.columnIsNullable,
+                    columnIsUnique: validatedData.columnIsUnique,
+                    columnIsPrimaryKey: validatedData.columnIsPrimaryKey,
+                    columnIsForeignKey: validatedData.columnIsForeignKey,
+                },
+            });
+
+            return {
+                success: true,
+                data: dataStructure,
+                message: '数据结构创建成功',
+            };
+        } catch (error) {
+            if (error instanceof z.ZodError) {
+                throw new Error('请求参数错误');
+            }
+            throw new Error('创建数据结构失败');
+        }
+    }
+
+    /**
+     * 获取项目数据结构列表
+     */
+    static async getProjectDataStructures(projectId: string) {
+        try {
+            const dataStructures = await prisma.dataStructure.findMany({
+                where: { projectId },
+                include: {
+                    project: true,
+                },
+                orderBy: [
+                    { schemaName: 'asc' },
+                    { tableName: 'asc' },
+                    { columnName: 'asc' },
+                ],
+            });
+
+            return {
+                success: true,
+                data: dataStructures,
+            };
+        } catch (error) {
+            throw new Error('获取项目数据结构列表失败');
+        }
+    }
+
+    /**
+     * 按表名获取数据结构
+     */
+    static async getDataStructuresByTable(projectId: string, tableName: string) {
+        try {
+            const dataStructures = await prisma.dataStructure.findMany({
+                where: { 
+                    projectId,
+                    tableName,
+                },
+                include: {
+                    project: true,
+                },
+                orderBy: {
+                    columnName: 'asc',
+                },
+            });
+
+            return {
+                success: true,
+                data: dataStructures,
+            };
+        } catch (error) {
+            throw new Error('获取表数据结构失败');
+        }
+    }
+
+    /**
+     * 根据ID获取数据结构
+     */
+    static async getDataStructureById(id: string) {
+        try {
+            const dataStructure = await prisma.dataStructure.findUnique({
+                where: { id },
+                include: {
+                    project: true,
+                },
+            });
+
+            if (!dataStructure) {
+                throw new Error('数据结构不存在');
+            }
+
+            return {
+                success: true,
+                data: dataStructure,
+            };
+        } catch (error) {
+            throw new Error('获取数据结构详情失败');
+        }
+    }
+
+    /**
+     * 更新数据结构
+     */
+    static async updateDataStructure(id: string, data: z.infer<typeof updateDataStructureSchema>) {
+        try {
+            const validatedData = updateDataStructureSchema.parse(data);
+
+            const dataStructure = await prisma.dataStructure.update({
+                where: { id },
+                data: {
+                    schemaName: validatedData.schemaName,
+                    tableName: validatedData.tableName,
+                    columnName: validatedData.columnName,
+                    columnType: validatedData.columnType,
+                    columnDescription: validatedData.columnDescription,
+                    columnDefaultValue: validatedData.columnDefaultValue,
+                    columnIsNullable: validatedData.columnIsNullable,
+                    columnIsUnique: validatedData.columnIsUnique,
+                    columnIsPrimaryKey: validatedData.columnIsPrimaryKey,
+                    columnIsForeignKey: validatedData.columnIsForeignKey,
+                },
+            });
+
+            return {
+                success: true,
+                data: dataStructure,
+                message: '数据结构更新成功',
+            };
+        } catch (error) {
+            if (error instanceof z.ZodError) {
+                throw new Error('请求参数错误');
+            }
+            throw new Error('更新数据结构失败');
+        }
+    }
+
+    /**
+     * 删除数据结构
+     */
+    static async deleteDataStructure(id: string) {
+        try {
+            await prisma.dataStructure.delete({
+                where: { id },
+            });
+
+            return {
+                success: true,
+                message: '数据结构删除成功',
+            };
+        } catch (error) {
+            throw new Error('删除数据结构失败');
+        }
+    }
+
+    /**
+     * 批量创建数据结构
+     */
+    static async batchCreateDataStructures(projectId: string, dataStructures: Array<Omit<z.infer<typeof createDataStructureSchema>, 'projectId'>>) {
+        try {
+            const validatedData = dataStructures.map(item => {
+                const fullItem = {
+                    ...item,
+                    projectId,
+                };
+                return createDataStructureSchema.parse(fullItem);
+            });
+
+            const result = await prisma.dataStructure.createMany({
+                data: validatedData,
+            });
+
+            return {
+                success: true,
+                data: result,
+                message: `成功创建 ${result.count} 个数据结构`,
+            };
+        } catch (error) {
+            if (error instanceof z.ZodError) {
+                throw new Error('请求参数错误');
+            }
+            throw new Error('批量创建数据结构失败');
+        }
+    }
+} 

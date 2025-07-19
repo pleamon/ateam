@@ -1,0 +1,173 @@
+model Documentation {
+    id           String     @id @default(uuid())
+    projectId    String
+    project      Project    @relation(fields: [projectId], references: [id])
+    name         String
+    content      String
+    type         String     @default("overview") // overview, technical, design, research, other
+    url          String?
+    teamId       String
+    teamMemberId String
+    team         Team       @relation(fields: [teamId], references: [id])
+    teamMember   TeamMember @relation(fields: [teamMemberId], references: [id])
+    createdAt    DateTime   @default(now())
+    updatedAt    DateTime   @updatedAt
+
+    @@schema("documentation")
+}
+
+model Requirement {
+    id           String     @id @default(uuid())
+    projectId    String
+    project      Project    @relation(fields: [projectId], references: [id])
+    content      String
+    teamId       String
+    team         Team       @relation(fields: [teamId], references: [id])
+    teamMemberId String
+    teamMember   TeamMember @relation(fields: [teamMemberId], references: [id])
+    createdAt    DateTime   @default(now())
+    updatedAt    DateTime   @updatedAt
+
+    @@schema("documentation")
+}
+
+model RequirementQuestion {
+    id           String     @id @default(uuid())
+    projectId    String
+    project      Project    @relation(fields: [projectId], references: [id])
+    question     String
+    answer       String
+    status       String     @default("todo") // todo, in_progress, done
+    clarified    Boolean    @default(false)
+    teamId       String
+    team         Team       @relation(fields: [teamId], references: [id])
+    teamMemberId String
+    teamMember   TeamMember @relation(fields: [teamMemberId], references: [id])
+    createdAt    DateTime   @default(now())
+    updatedAt    DateTime   @updatedAt
+
+    @@schema("documentation")
+}
+
+model DomainKnowledge {
+    id             String     @id @default(uuid())
+    projectId      String
+    project        Project    @relation(fields: [projectId], references: [id])
+    domain         String
+    concepts       String[] // 概念
+    commonPatterns String[] // 常见模式
+    bestPractices  String[] // 最佳实践
+    antiPatterns   String[] // 反模式
+    teamId         String
+    team           Team       @relation(fields: [teamId], references: [id])
+    teamMemberId   String
+    teamMember     TeamMember @relation(fields: [teamMemberId], references: [id])
+    createdAt      DateTime   @default(now())
+    updatedAt      DateTime   @updatedAt
+
+    @@schema("documentation")
+}
+
+model Minimap {
+    id           String     @id @default(uuid())
+    projectId    String
+    project      Project    @relation(fields: [projectId], references: [id])
+    content      String
+    teamId       String
+    team         Team       @relation(fields: [teamId], references: [id])
+    teamMemberId String
+    teamMember   TeamMember @relation(fields: [teamMemberId], references: [id])
+    createdAt    DateTime   @default(now())
+    updatedAt    DateTime   @updatedAt
+
+    @@schema("documentation")
+}
+
+model SystemArchitecture {
+    id                    String                 @id @default(uuid())
+    projectId             String
+    project               Project                @relation(fields: [projectId], references: [id])
+    overview              String // 技术架构总览
+    // 针对每个平台的架构描述，允许存储多平台的架构细节
+    platformArchitectures PlatformArchitecture[] // 每个平台的技术架构详情
+    platforms             String[] // 支持的平台（如 web, mobile, desktop 等）
+    components            String[] // 主要组件
+    technologies          String[] // 关键技术栈
+    diagrams              String? // 架构图（可选，存储为URL或Base64）
+    notes                 String? // 备注
+    teamId                String
+    team                  Team                   @relation(fields: [teamId], references: [id])
+    teamMemberId          String
+    teamMember            TeamMember             @relation(fields: [teamMemberId], references: [id])
+    createdAt             DateTime               @default(now())
+    updatedAt             DateTime               @updatedAt
+
+    @@schema("documentation")
+}
+
+model PlatformArchitecture {
+    id                   String             @id @default(uuid())
+    systemArchitectureId String
+    systemArchitecture   SystemArchitecture @relation(fields: [systemArchitectureId], references: [id])
+    platform             String // 平台名称（如 web, mobile, desktop 等）
+    frontend             String? // 前端架构描述（可选）
+    backend              String? // 后端架构描述（可选）
+    technologies         String[] // 该平台的关键技术栈
+    components           String[] // 该平台的主要组件
+    diagrams             String? // 该平台的架构图（可选，存储为URL或Base64）
+    notes                String? // 备注
+    teamId               String
+    team                 Team               @relation(fields: [teamId], references: [id])
+    teamMemberId         String
+    teamMember           TeamMember         @relation(fields: [teamMemberId], references: [id])
+    createdAt            DateTime           @default(now())
+    updatedAt            DateTime           @updatedAt
+
+    @@schema("documentation")
+}
+
+model ApiDesign {
+    id             String     @id @default(uuid())
+    projectId      String
+    project        Project    @relation(fields: [projectId], references: [id])
+    platform       String
+    apiName        String
+    apiPath        String
+    apiMethod      String     @default("GET") // GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD
+    apiContentType String     @default("application/json") // application/json, application/xml, application/x-www-form-urlencoded, multipart/form-data, text/plain
+    apiDescription String
+    requestFields  String
+    responseFields String
+    teamId         String
+    team           Team       @relation(fields: [teamId], references: [id])
+    teamMemberId   String
+    teamMember     TeamMember @relation(fields: [teamMemberId], references: [id])
+    createdAt      DateTime   @default(now())
+    updatedAt      DateTime   @updatedAt
+
+    @@schema("documentation")
+}
+
+model DataStructure {
+    id                 String     @id @default(uuid())
+    projectId          String
+    project            Project    @relation(fields: [projectId], references: [id])
+    schemaName         String
+    tableName          String
+    columnName         String
+    columnType         String
+    columnDescription  String
+    columnDefaultValue String
+    columnIsNullable   Boolean
+    columnIsUnique     Boolean
+    columnIsPrimaryKey Boolean
+    columnIsForeignKey Boolean
+    teamId             String
+    team               Team       @relation(fields: [teamId], references: [id])
+    teamMemberId       String
+    teamMember         TeamMember @relation(fields: [teamMemberId], references: [id])
+    createdAt          DateTime   @default(now())
+    updatedAt          DateTime   @updatedAt
+
+    @@schema("documentation")
+}

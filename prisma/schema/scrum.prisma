@@ -4,6 +4,11 @@ model Project {
     description String?
     createdAt   DateTime @default(now())
     updatedAt   DateTime @updatedAt
+    
+    // 用户关联
+    createdBy   String?              // 创建者ID
+    creator     User?    @relation(fields: [createdBy], references: [id])
+    members     ProjectMember[]      // 项目成员
 
     tasks               Task[]
     documentation       Documentation[]
@@ -13,6 +18,11 @@ model Project {
     RequirementQuestion RequirementQuestion[]
     DomainKnowledge     DomainKnowledge[]
     SystemArchitecture  SystemArchitecture[]
+    roadmaps            Roadmap[]
+    DataStructure       DataStructure[]
+    ApiDesign           ApiDesign[]
+
+    @@schema("scrum")
 }
 
 model Sprint {
@@ -26,6 +36,8 @@ model Sprint {
     status    String   @default("todo") // todo, in_progress, done
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
+
+    @@schema("scrum")
 }
 
 model Task {
@@ -43,4 +55,8 @@ model Task {
     TeamMemberTask    TeamMemberTask[]
     TeamMemberWorklog TeamMemberWorklog[]
     TaskActivity      TaskActivity[]
+    Feature           Feature?            @relation(fields: [featureId], references: [id])
+    featureId         String?
+
+    @@schema("scrum")
 }
