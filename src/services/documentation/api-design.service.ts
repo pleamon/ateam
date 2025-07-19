@@ -166,7 +166,7 @@ export class ApiDesignService {
     static async getApiDesignsByPlatform(projectId: string, platform: string) {
         try {
             const apiDesigns = await prisma.apiDesign.findMany({
-                where: { 
+                where: {
                     projectId,
                     platform,
                 },

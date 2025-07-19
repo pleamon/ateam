@@ -5,10 +5,10 @@ import {
     ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 import { ProjectService } from '../services/project.service.js';
-import { TeamService } from '../services/team.service.js';
+import { TeamService } from '../services/team/team.service.js';
 import { TaskService } from '../services/task.service.js';
 import { SprintService } from '../services/sprint.service.js';
-import { DocumentationService } from '../services/documentation.service.js';
+import { DocumentationService } from '../services/documentation/index.js';
 import { DashboardService } from '../services/dashboard.service.js';
 import { RoadmapService } from '../services/roadmap.service.js';
 
