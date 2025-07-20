@@ -29,6 +29,7 @@
     "test:seed": "tsx src/seed-data.ts",
     "test:demo": "tsx src/demo-data.ts",
     "seed": "tsx src/seed-data.ts",
+    "seed:agents": "tsx src/seeds/index.ts",
     "mcp:build": "tsc",
     "mcp:start": "node dist/mcp/index.js",
     "mcp:dev": "tsx src/mcp/index.ts",

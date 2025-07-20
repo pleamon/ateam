@@ -8,12 +8,12 @@ import apiDesignRoutes from './api-design.routes';
 import dataStructureRoutes from './data-structure.routes';
 
 export default async function documentationRoutes(fastify: FastifyInstance) {
-    // 注册所有子路由
-    await fastify.register(documentationBaseRoutes);
-    await fastify.register(mindMapRoutes);
-    await fastify.register(requirementsRoutes);
-    await fastify.register(domainKnowledgeRoutes);
-    await fastify.register(architectureRoutes);
-    await fastify.register(apiDesignRoutes);
-    await fastify.register(dataStructureRoutes);
+  // 注册所有子路由
+  await fastify.register(documentationBaseRoutes);
+  await fastify.register(mindMapRoutes);
+  await fastify.register(requirementsRoutes);
+  await fastify.register(domainKnowledgeRoutes);
+  await fastify.register(architectureRoutes);
+  await fastify.register(apiDesignRoutes);
+  await fastify.register(dataStructureRoutes);
 }

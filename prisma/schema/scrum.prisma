@@ -1,30 +1,3 @@
-model Project {
-    id          String   @id @default(uuid())
-    name        String
-    description String?
-    createdAt   DateTime @default(now())
-    updatedAt   DateTime @updatedAt
-    
-    // 用户关联
-    createdBy   String?              // 创建者ID
-    creator     User?    @relation(fields: [createdBy], references: [id])
-    members     ProjectMember[]      // 项目成员
-
-    tasks               Task[]
-    documentation       Documentation[]
-    Minimap             Minimap[]
-    Sprint              Sprint[]
-    Requirement         Requirement[]
-    RequirementQuestion RequirementQuestion[]
-    DomainKnowledge     DomainKnowledge[]
-    SystemArchitecture  SystemArchitecture[]
-    roadmaps            Roadmap[]
-    DataStructure       DataStructure[]
-    ApiDesign           ApiDesign[]
-
-    @@schema("scrum")
-}
-
 model Sprint {
     id        String   @id @default(uuid())
     projectId String
@@ -36,27 +9,29 @@ model Sprint {
     status    String   @default("todo") // todo, in_progress, done
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
+    Task      Task[]
 
     @@schema("scrum")
 }
 
 model Task {
-    id                String              @id @default(uuid())
-    projectId         String
-    project           Project             @relation(fields: [projectId], references: [id])
-    teamId            String
-    team              Team                @relation(fields: [teamId], references: [id])
-    title             String
-    content           String?
-    status            String              @default("todo") // todo, in_progress, testing, done
-    dueDate           DateTime?
-    createdAt         DateTime            @default(now())
-    updatedAt         DateTime            @updatedAt
-    TeamMemberTask    TeamMemberTask[]
-    TeamMemberWorklog TeamMemberWorklog[]
-    TaskActivity      TaskActivity[]
-    Feature           Feature?            @relation(fields: [featureId], references: [id])
-    featureId         String?
+    id           String         @id @default(uuid())
+    projectId    String
+    project      Project        @relation(fields: [projectId], references: [id])
+    sprintId     String
+    sprint       Sprint         @relation(fields: [sprintId], references: [id])
+    teamId       String
+    team         Team           @relation(fields: [teamId], references: [id])
+    title        String
+    content      String?
+    status       String         @default("todo") // todo, in_progress, testing, done
+    dueDate      DateTime?
+    createdAt    DateTime       @default(now())
+    updatedAt    DateTime       @updatedAt
+    feature      Feature?       @relation(fields: [featureId], references: [id])
+    featureId    String?
+    AgentTask    AgentTask[]
+    AgentWorklog AgentWorklog[]
 
     @@schema("scrum")
 }

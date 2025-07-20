@@ -3,8 +3,8 @@ import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
-import { PrismaClient } from '../generated/prisma';
-import { PrismaPg } from '@prisma/adapter-pg';
+// import { PrismaClient } from '../generated/prisma';
+// import { PrismaPg } from '@prisma/adapter-pg';
 
 // 导入插件
 import authPlugin from './plugins/auth.plugin';
@@ -20,27 +20,16 @@ import sprintRoutes from './routes/sprint';
 import documentationRoutes from './routes/documentation';
 import dashboardRoutes from './routes/dashboard';
 import roadmapRoutes from './routes/roadmap';
+import mcpRoutes from './routes/mcp';
+import demoRoutes from './routes/demo';
 
 const fastify = Fastify({
   logger: true,
 });
 
-// const initPrisma = async () => {
-//   const connectionString = `${process.env.DATABASE_URL}`;
-
-//   const adapter = new PrismaPg({ connectionString });
-//   const prisma = new PrismaClient({ adapter });
-//   return prisma;
-// };
-
 // 启动服务器
 const start = async () => {
   try {
-    // const prisma = await initPrisma();
-    // const projects = await prisma.project.findMany();
-    // console.log('projects');
-    // console.log(projects);
-
     // 注册插件
     await fastify.register(cors, {
       origin: true,
@@ -76,6 +65,10 @@ const start = async () => {
         '/health',
         '/',
         '/docs',
+        '/api/mcp', // MCP 端点暂时不需要认证
+        '/api/mcp/info',
+        '/api/mcp/tools',
+        '/api/demo', // 演示端点不需要认证
       ],
     });
 
@@ -90,28 +83,35 @@ const start = async () => {
     await fastify.register(documentationRoutes, { prefix: '/api' });
     await fastify.register(dashboardRoutes, { prefix: '/api' });
     await fastify.register(roadmapRoutes, { prefix: '/api' });
+    await fastify.register(mcpRoutes, { prefix: '/api' });
+    await fastify.register(demoRoutes, { prefix: '/api' });
 
     // 健康检查
-    fastify.get('/health', async (request, reply) => {
-      return { status: 'ok', timestamp: new Date().toISOString() };
-    });
+    fastify.get('/health', async () => ({
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+    }));
 
     // 根路径
-    fastify.get('/', async (request, reply) => {
-      return {
-        message: 'ATeam项目管理API',
-        version: '1.0.0',
-        docs: '/docs'
-      };
-    });
+    fastify.get('/', async () => ({
+      message: 'ATeam项目管理API',
+      version: '1.0.0',
+      docs: '/docs',
+    }));
 
     await fastify.listen({ port: 3000, host: '0.0.0.0' });
-    console.log('🚀 服务器运行在 http://localhost:3000');
-    console.log('📚 API文档: http://localhost:3000/docs');
+    fastify.log.info('🚀 服务器运行在 http://localhost:3000');
+    fastify.log.info('📚 API文档: http://localhost:3000/docs');
+    fastify.log.info('🤖 MCP HTTP 端点: http://localhost:3000/api/mcp');
+    fastify.log.info('   - 工具列表: http://localhost:3000/api/mcp/tools');
+    fastify.log.info('   - JSON-RPC: http://localhost:3000/api/mcp');
+    fastify.log.info('🎯 演示端点: http://localhost:3000/api/demo');
+    fastify.log.info('   - 启动演示: POST /api/demo/start');
+    fastify.log.info('   - 模拟工作流: POST /api/demo/simulate-workflow');
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);
   }
 };
 
-start();
+void start();

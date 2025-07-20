@@ -13,7 +13,7 @@ model Roadmap {
     milestones Milestone[]
     versions   Version[]
 
-    @@schema("scrum")
+    @@schema("roadmap")
 }
 
 model Milestone {
@@ -30,7 +30,7 @@ model Milestone {
 
     features Feature[]
 
-    @@schema("scrum")
+    @@schema("roadmap")
 }
 
 model Version {
@@ -46,7 +46,7 @@ model Version {
 
     features Feature[]
 
-    @@schema("scrum")
+    @@schema("roadmap")
 }
 
 model Feature {
@@ -65,5 +65,5 @@ model Feature {
 
     tasks Task[]
 
-    @@schema("scrum")
+    @@schema("roadmap")
 }

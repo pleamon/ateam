@@ -1,0 +1,76 @@
+model Agent {
+    id               String          @id @default(uuid())
+    projectId        String
+    project          Project         @relation(fields: [projectId], references: [id])
+    teamId           String
+    team             Team            @relation(fields: [teamId], references: [id])
+    name             String
+    description      String?
+    workPrompt       String?
+    responsibilities String[]
+    skills           String[]
+    createdAt        DateTime        @default(now())
+    updatedAt        DateTime        @updatedAt
+    AgentActivity    AgentActivity[]
+    AgentTask        AgentTask[]
+    AgentWorklog     AgentWorklog[]
+
+    @@schema("agent")
+}
+
+model AgentTask {
+    id        String   @id @default(uuid())
+    agentId   String
+    agent     Agent    @relation(fields: [agentId], references: [id])
+    taskId    String
+    task      Task     @relation(fields: [taskId], references: [id])
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@schema("agent")
+}
+
+model AgentActivity {
+    id        String   @id @default(uuid())
+    agentId   String
+    agent     Agent    @relation(fields: [agentId], references: [id])
+    body      String
+    action    String   @default("agent_checkin") // agent_checkin, agent_checkout, agent_work, agent_submit_work
+    details   Json?
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@schema("agent")
+}
+
+model AgentWorklog {
+    id        String   @id @default(uuid())
+    projectId String
+    project   Project  @relation(fields: [projectId], references: [id])
+    agentId   String
+    agent     Agent    @relation(fields: [agentId], references: [id])
+    taskId    String
+    task      Task     @relation(fields: [taskId], references: [id])
+    workType  String
+    summarize String?
+    nextPlan  String?
+    content   String?
+    metadata  Json?
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@schema("agent")
+}
+
+model AgentPromptTemplate {
+    id             String   @id @default(uuid())
+    name           String // 模板名称，如"前端开发工程师"
+    responsibility String // 对应的职责
+    prompt         String   @db.Text // 提示词内容
+    description    String? // 模板描述
+    isActive       Boolean  @default(true) // 是否启用
+    createdAt      DateTime @default(now())
+    updatedAt      DateTime @updatedAt
+
+    @@schema("agent")
+}

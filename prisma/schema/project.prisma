@@ -1,0 +1,29 @@
+model Project {
+    id          String   @id @default(uuid())
+    name        String
+    description String?
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    // 用户关联
+    createdBy String? // 创建者ID
+    creator   User?           @relation(fields: [createdBy], references: [id])
+    members   ProjectMember[] // 项目成员
+
+    tasks               Task[]
+    documentation       Documentation[]
+    MindMap             MindMap[]
+    Sprint              Sprint[]
+    Requirement         Requirement[]
+    RequirementQuestion RequirementQuestion[]
+    DomainKnowledge     DomainKnowledge[]
+    SystemArchitecture  SystemArchitecture[]
+    roadmaps            Roadmap[]
+    DataStructure       DataStructure[]
+    ApiDesign           ApiDesign[]
+    team                Team[]
+    Agent               Agent[]
+    AgentWorklog        AgentWorklog[]
+
+    @@schema("project")
+}
