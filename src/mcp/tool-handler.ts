@@ -1,11 +1,19 @@
-import { ProjectService } from '../services/project.service.js';
-import { TeamService } from '../services/team/team.service.js';
-import { TaskService } from '../services/task.service.js';
-import { SprintService } from '../services/sprint.service.js';
-import { DocumentationService } from '../services/documentation/index.js';
-import { DashboardService } from '../services/dashboard.service.js';
-import { RoadmapService } from '../services/roadmap.service.js';
-import { AgentService } from '../services/agent/agent.service.js';
+import { ProjectService } from '../services/scrum/project.service';
+import { TeamService } from '../services/team/team.service';
+import { TaskService } from '../services/scrum/task.service';
+import { SprintService } from '../services/scrum/sprint.service';
+import { DocumentationService } from '../services/documentation/index';
+import { DashboardService } from '../services/dashboard.service';
+import { RoadmapService } from '../services/roadmap/roadmap.service';
+import { AgentService } from '../services/agent/agent.service';
+import { RequirementsService } from '../services/documentation/requirements.service';
+import { ArchitectureService } from '../services/documentation/architecture.service';
+import { ApiDesignService } from '../services/documentation/api-design.service';
+import { MindMapService } from '../services/documentation/mindmap.service';
+import { DomainKnowledgeService } from '../services/documentation/domain-knowledge.service';
+import { DataStructureService } from '../services/documentation/data-structure.service';
+import { PermissionService } from '../services/auth/permission.service';
+import { ServiceAdapter } from './service-adapter';
 
 export class ToolHandler {
   static async handleToolCall(name: string, args: any): Promise<any> {
@@ -522,7 +530,7 @@ export class ToolHandler {
             agentRole: string;
             projectId: string;
           };
-          const result = await AgentService.agentCheckin({
+          const result = await ServiceAdapter.agentCheckin({
             agentName,
             agentRole,
             projectId,
@@ -539,7 +547,7 @@ export class ToolHandler {
 
         case 'agent_checkout': {
           const { teamMemberId } = args as { teamMemberId: string };
-          const result = await AgentService.agentCheckout(teamMemberId);
+          const result = await ServiceAdapter.agentCheckout(teamMemberId);
           return {
             content: [
               {
@@ -552,7 +560,7 @@ export class ToolHandler {
 
         case 'get_agent_tasks': {
           const { teamMemberId } = args as { teamMemberId: string };
-          const result = await AgentService.getAgentTasks(teamMemberId);
+          const result = await ServiceAdapter.getAgentTasks(teamMemberId);
           return {
             content: [
               {
@@ -565,7 +573,7 @@ export class ToolHandler {
 
         case 'get_task_context': {
           const { taskId } = args as { taskId: string };
-          const result = await AgentService.getTaskContext(taskId);
+          const result = await ServiceAdapter.getTaskContext(taskId);
           return {
             content: [
               {
@@ -584,7 +592,7 @@ export class ToolHandler {
             content: string;
             metadata?: any;
           };
-          const result = await AgentService.submitWork({
+          const result = await ServiceAdapter.submitWork({
             teamMemberId,
             taskId,
             workType,
@@ -608,7 +616,7 @@ export class ToolHandler {
             content: string;
             projectId: string;
           };
-          const result = await AgentService.recordWorklog({
+          const result = await ServiceAdapter.recordWorklog({
             teamMemberId,
             taskId,
             content,
@@ -626,7 +634,7 @@ export class ToolHandler {
 
         case 'get_agent_prompt': {
           const { teamMemberId } = args as { teamMemberId: string };
-          const result = await AgentService.getAgentPrompt(teamMemberId);
+          const result = await ServiceAdapter.getAgentPrompt(teamMemberId);
           return {
             content: [
               {
@@ -643,7 +651,311 @@ export class ToolHandler {
             toMemberId: string;
             context: any;
           };
-          const result = await AgentService.requestCollaboration(fromMemberId, toMemberId, context);
+          const result = await ServiceAdapter.requestCollaboration(fromMemberId, toMemberId, context);
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(result, null, 2),
+              },
+            ],
+          };
+        }
+
+        // 需求管理工具
+        case 'get_requirements': {
+          const { projectId } = args as { projectId?: string };
+          const result = await ServiceAdapter.getAllRequirements(projectId);
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(result, null, 2),
+              },
+            ],
+          };
+        }
+
+        case 'get_requirement': {
+          const { requirementId } = args as { requirementId: string };
+          const result = await RequirementsService.getRequirementById(requirementId);
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(result, null, 2),
+              },
+            ],
+          };
+        }
+
+        case 'create_requirement': {
+          const { projectId, title, description, type, priority, source } = args as {
+            projectId: string;
+            title: string;
+            description?: string;
+            type: string;
+            priority: string;
+            source?: string;
+          };
+          const result = await ServiceAdapter.createRequirement({
+            projectId,
+            title,
+            description,
+            type,
+            priority,
+            source,
+          });
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(result, null, 2),
+              },
+            ],
+          };
+        }
+
+        case 'update_requirement': {
+          const { requirementId, title, description, status, priority } = args as {
+            requirementId: string;
+            title?: string;
+            description?: string;
+            status?: string;
+            priority?: string;
+          };
+          const result = await ServiceAdapter.updateRequirement(requirementId, {
+            title,
+            description,
+            status,
+            priority,
+          });
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(result, null, 2),
+              },
+            ],
+          };
+        }
+
+        // 架构设计工具
+        case 'get_architectures': {
+          const { projectId } = args as { projectId?: string };
+          const result = await ServiceAdapter.getAllArchitectures(projectId);
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(result, null, 2),
+              },
+            ],
+          };
+        }
+
+        case 'create_architecture': {
+          const { projectId, name, type, description, content } = args as {
+            projectId: string;
+            name: string;
+            type: string;
+            description?: string;
+            content?: string;
+          };
+          const result = await ServiceAdapter.createArchitecture({
+            projectId,
+            name,
+            type,
+            description,
+            content,
+          });
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(result, null, 2),
+              },
+            ],
+          };
+        }
+
+        // API设计工具
+        case 'get_api_designs': {
+          const { projectId } = args as { projectId?: string };
+          const result = await ServiceAdapter.getAllApiDesigns(projectId);
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(result, null, 2),
+              },
+            ],
+          };
+        }
+
+        case 'create_api_design': {
+          const { projectId, name, method, path, description, requestBody, responseBody } = args as {
+            projectId: string;
+            name: string;
+            method: string;
+            path: string;
+            description?: string;
+            requestBody?: any;
+            responseBody?: any;
+          };
+          const result = await ServiceAdapter.createApiDesign({
+            projectId,
+            name,
+            method,
+            path,
+            description,
+            requestBody,
+            responseBody,
+          });
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(result, null, 2),
+              },
+            ],
+          };
+        }
+
+        // 脑图工具
+        case 'get_mindmap': {
+          const { projectId } = args as { projectId: string };
+          const result = await MindMapService.getProjectMindMap(projectId);
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(result, null, 2),
+              },
+            ],
+          };
+        }
+
+        case 'create_mindmap': {
+          const { projectId, content, nodes } = args as {
+            projectId: string;
+            content?: string;
+            nodes?: any[];
+          };
+          const result = await MindMapService.createMindMap({
+            projectId,
+            content,
+            nodes,
+          });
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(result, null, 2),
+              },
+            ],
+          };
+        }
+
+        // 领域知识管理工具
+        case 'get_domain_knowledge': {
+          const { projectId } = args as { projectId?: string };
+          const result = await ServiceAdapter.getAllDomainKnowledge(projectId);
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(result, null, 2),
+              },
+            ],
+          };
+        }
+
+        case 'create_domain_knowledge': {
+          const { projectId, term, category, definition, context, examples } = args as {
+            projectId: string;
+            term: string;
+            category: string;
+            definition: string;
+            context?: string;
+            examples?: string[];
+          };
+          const result = await ServiceAdapter.createDomainKnowledge({
+            projectId,
+            term,
+            category,
+            definition,
+            context,
+            examples,
+          });
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(result, null, 2),
+              },
+            ],
+          };
+        }
+
+        // 数据结构设计工具
+        case 'get_data_structures': {
+          const { projectId } = args as { projectId?: string };
+          const result = await ServiceAdapter.getAllDataStructures(projectId);
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(result, null, 2),
+              },
+            ],
+          };
+        }
+
+        case 'create_data_structure': {
+          const { projectId, name, type, fields } = args as {
+            projectId: string;
+            name: string;
+            type: string;
+            fields?: any[];
+          };
+          const result = await ServiceAdapter.createDataStructure({
+            projectId,
+            name,
+            type,
+            fields,
+          });
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(result, null, 2),
+              },
+            ],
+          };
+        }
+
+        // 权限管理工具
+        case 'get_user_permissions': {
+          const { userId, projectId } = args as { userId: string; projectId: string };
+          const result = await ServiceAdapter.getUserProjectPermissions(userId, projectId);
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(result, null, 2),
+              },
+            ],
+          };
+        }
+
+        case 'assign_project_role': {
+          const { userId, projectId, role } = args as {
+            userId: string;
+            projectId: string;
+            role: string;
+          };
+          const result = await ServiceAdapter.assignProjectRole(userId, projectId, role);
           return {
             content: [
               {

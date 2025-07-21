@@ -1,5 +1,7 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { DashboardService } from '../services/dashboard.service';
+import { Controller, Get, Res, Body } from '@nestjs/common';
+
 
 export default async function dashboardRoutes(fastify: FastifyInstance) {
   // 获取仪表盘统计数据

@@ -663,4 +663,401 @@ export const toolsDefinition = [
       required: ['fromMemberId', 'toMemberId', 'context'],
     },
   },
+  // 需求管理工具
+  {
+    name: 'get_requirements',
+    description: '获取项目的所有需求列表',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        projectId: {
+          type: 'string',
+          description: '项目ID（可选）',
+        },
+      },
+    },
+  },
+  {
+    name: 'get_requirement',
+    description: '根据ID获取需求详情',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        requirementId: {
+          type: 'string',
+          description: '需求ID',
+        },
+      },
+      required: ['requirementId'],
+    },
+  },
+  {
+    name: 'create_requirement',
+    description: '创建新需求',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        projectId: {
+          type: 'string',
+          description: '项目ID',
+        },
+        title: {
+          type: 'string',
+          description: '需求标题',
+        },
+        description: {
+          type: 'string',
+          description: '需求描述',
+        },
+        type: {
+          type: 'string',
+          enum: ['functional', 'non_functional', 'business', 'technical', 'constraint'],
+          description: '需求类型',
+        },
+        priority: {
+          type: 'string',
+          enum: ['critical', 'high', 'medium', 'low'],
+          description: '优先级',
+        },
+        source: {
+          type: 'string',
+          enum: ['client', 'internal', 'market', 'regulatory', 'technical'],
+          description: '需求来源',
+        },
+      },
+      required: ['projectId', 'title', 'type', 'priority'],
+    },
+  },
+  {
+    name: 'update_requirement',
+    description: '更新需求信息',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        requirementId: {
+          type: 'string',
+          description: '需求ID',
+        },
+        title: {
+          type: 'string',
+          description: '需求标题',
+        },
+        description: {
+          type: 'string',
+          description: '需求描述',
+        },
+        status: {
+          type: 'string',
+          enum: ['draft', 'reviewing', 'approved', 'implementing', 'testing', 'completed', 'cancelled'],
+          description: '需求状态',
+        },
+        priority: {
+          type: 'string',
+          enum: ['critical', 'high', 'medium', 'low'],
+          description: '优先级',
+        },
+      },
+      required: ['requirementId'],
+    },
+  },
+  // 架构设计工具
+  {
+    name: 'get_architectures',
+    description: '获取项目的所有架构设计文档',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        projectId: {
+          type: 'string',
+          description: '项目ID（可选）',
+        },
+      },
+    },
+  },
+  {
+    name: 'create_architecture',
+    description: '创建架构设计文档',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        projectId: {
+          type: 'string',
+          description: '项目ID',
+        },
+        name: {
+          type: 'string',
+          description: '架构名称',
+        },
+        type: {
+          type: 'string',
+          enum: ['system', 'application', 'data', 'deployment', 'security', 'integration'],
+          description: '架构类型',
+        },
+        description: {
+          type: 'string',
+          description: '架构描述',
+        },
+        content: {
+          type: 'string',
+          description: '架构详细内容（支持Markdown）',
+        },
+      },
+      required: ['projectId', 'name', 'type'],
+    },
+  },
+  // API设计工具
+  {
+    name: 'get_api_designs',
+    description: '获取项目的所有API设计文档',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        projectId: {
+          type: 'string',
+          description: '项目ID（可选）',
+        },
+      },
+    },
+  },
+  {
+    name: 'create_api_design',
+    description: '创建API设计文档',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        projectId: {
+          type: 'string',
+          description: '项目ID',
+        },
+        name: {
+          type: 'string',
+          description: 'API名称',
+        },
+        method: {
+          type: 'string',
+          enum: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+          description: 'HTTP方法',
+        },
+        path: {
+          type: 'string',
+          description: 'API路径',
+        },
+        description: {
+          type: 'string',
+          description: 'API描述',
+        },
+        requestBody: {
+          type: 'object',
+          description: '请求体结构',
+        },
+        responseBody: {
+          type: 'object',
+          description: '响应体结构',
+        },
+      },
+      required: ['projectId', 'name', 'method', 'path'],
+    },
+  },
+  // 脑图工具
+  {
+    name: 'get_mindmap',
+    description: '获取项目的脑图',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        projectId: {
+          type: 'string',
+          description: '项目ID',
+        },
+      },
+      required: ['projectId'],
+    },
+  },
+  {
+    name: 'create_mindmap',
+    description: '创建或更新项目脑图',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        projectId: {
+          type: 'string',
+          description: '项目ID',
+        },
+        content: {
+          type: 'string',
+          description: '脑图内容（JSON格式）',
+        },
+        nodes: {
+          type: 'array',
+          description: '脑图节点数组',
+          items: {
+            type: 'object',
+            properties: {
+              id: {
+                type: 'string',
+                description: '节点ID',
+              },
+              text: {
+                type: 'string',
+                description: '节点文本',
+              },
+              parentId: {
+                type: 'string',
+                description: '父节点ID',
+              },
+              position: {
+                type: 'object',
+                properties: {
+                  x: { type: 'number' },
+                  y: { type: 'number' },
+                },
+              },
+            },
+          },
+        },
+      },
+      required: ['projectId'],
+    },
+  },
+  // 领域知识管理工具
+  {
+    name: 'get_domain_knowledge',
+    description: '获取项目的领域知识列表',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        projectId: {
+          type: 'string',
+          description: '项目ID（可选）',
+        },
+      },
+    },
+  },
+  {
+    name: 'create_domain_knowledge',
+    description: '创建领域知识条目',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        projectId: {
+          type: 'string',
+          description: '项目ID',
+        },
+        term: {
+          type: 'string',
+          description: '术语名称',
+        },
+        category: {
+          type: 'string',
+          description: '分类',
+        },
+        definition: {
+          type: 'string',
+          description: '定义说明',
+        },
+        context: {
+          type: 'string',
+          description: '使用上下文',
+        },
+        examples: {
+          type: 'array',
+          items: { type: 'string' },
+          description: '示例列表',
+        },
+      },
+      required: ['projectId', 'term', 'category', 'definition'],
+    },
+  },
+  // 数据结构设计工具
+  {
+    name: 'get_data_structures',
+    description: '获取项目的数据结构设计',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        projectId: {
+          type: 'string',
+          description: '项目ID（可选）',
+        },
+      },
+    },
+  },
+  {
+    name: 'create_data_structure',
+    description: '创建数据结构设计',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        projectId: {
+          type: 'string',
+          description: '项目ID',
+        },
+        name: {
+          type: 'string',
+          description: '数据结构名称',
+        },
+        type: {
+          type: 'string',
+          enum: ['entity', 'value_object', 'aggregate', 'dto', 'enum'],
+          description: '数据结构类型',
+        },
+        fields: {
+          type: 'array',
+          description: '字段列表',
+          items: {
+            type: 'object',
+            properties: {
+              name: { type: 'string' },
+              type: { type: 'string' },
+              required: { type: 'boolean' },
+              description: { type: 'string' },
+            },
+          },
+        },
+      },
+      required: ['projectId', 'name', 'type'],
+    },
+  },
+  // 权限管理工具
+  {
+    name: 'get_user_permissions',
+    description: '获取用户在项目中的权限',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        userId: {
+          type: 'string',
+          description: '用户ID',
+        },
+        projectId: {
+          type: 'string',
+          description: '项目ID',
+        },
+      },
+      required: ['userId', 'projectId'],
+    },
+  },
+  {
+    name: 'assign_project_role',
+    description: '分配项目角色给用户',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        userId: {
+          type: 'string',
+          description: '用户ID',
+        },
+        projectId: {
+          type: 'string',
+          description: '项目ID',
+        },
+        role: {
+          type: 'string',
+          enum: ['owner', 'admin', 'member', 'viewer'],
+          description: '项目角色',
+        },
+      },
+      required: ['userId', 'projectId', 'role'],
+    },
+  },
 ];
