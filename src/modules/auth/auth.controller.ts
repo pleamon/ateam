@@ -22,11 +22,7 @@ import { CurrentUser, CurrentUserData } from './decorators/current-user.decorato
 @ApiTags('认证')
 @Controller('auth')
 export class AuthController {
-  constructor(@Inject(AuthService) private readonly authService: AuthService) {
-    console.log('=======================================');
-    console.log('AuthController');
-    console.log(this.authService);
-  }
+  constructor(private readonly authService: AuthService) { }
 
   @Post('register')
   @Public()

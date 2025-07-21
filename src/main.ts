@@ -33,16 +33,16 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe());
   app.useGlobalInterceptors(new LoggingInterceptor(), new ResponseInterceptor());
 
-  // 配置 Swagger (暂时禁用)
-  // const swaggerConfig = configService.get('swagger');
-  // const config = new DocumentBuilder()
-  //   .setTitle(swaggerConfig.title)
-  //   .setDescription(swaggerConfig.description)
-  //   .setVersion(swaggerConfig.version)
-  //   .addBearerAuth()
-  //   .build();
-  // const document = SwaggerModule.createDocument(app, config);
-  // SwaggerModule.setup(swaggerConfig.path, app, document);
+  // 配置 Swagger
+  const swaggerConfig = configService.get('swagger');
+  const config = new DocumentBuilder()
+    .setTitle(swaggerConfig.title)
+    .setDescription(swaggerConfig.description)
+    .setVersion(swaggerConfig.version)
+    .addBearerAuth()
+    .build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup(swaggerConfig.path, app, document);
 
   const port = configService.get<number>('port');
   await app.listen(port, '0.0.0.0');
