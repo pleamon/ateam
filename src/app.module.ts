@@ -5,6 +5,11 @@ import { ProjectModule } from './modules/project/project.module';
 import { TeamModule } from './modules/team/team.module';
 import { ScrumModule } from './modules/scrum/scrum.module';
 import { DocumentationModule } from './modules/documentation/documentation.module';
+import { ApiDesignModule } from './modules/api-design/api-design.module';
+import { ArchitectureModule } from './modules/architecture/architecture.module';
+import { DatabaseDesignModule } from './modules/database-design/database-design.module';
+import { KnowledgeModule } from './modules/knowledge/knowledge.module';
+import { RequirementsModule } from './modules/requirements/requirements.module';
 import { RoadmapModule } from './modules/roadmap/roadmap.module';
 import { McpModule } from './modules/mcp/mcp.module';
 import { AppController } from './app.controller';
@@ -42,6 +47,11 @@ import { PrismaModule } from './shared/prisma/prisma.module';
     TeamModule,
     ScrumModule,
     DocumentationModule,
+    ApiDesignModule,
+    ArchitectureModule,
+    DatabaseDesignModule,
+    KnowledgeModule,
+    RequirementsModule,
     RoadmapModule,
     McpModule,
   ],

@@ -5,8 +5,8 @@ import {
   CreateRequirementQuestionDto,
   RequirementStatus,
   // QuestionStatus,
-} from '../dto/create-requirement.dto';
-import { PermissionService, Permission } from '../../auth/permission.service';
+} from './dto/create-requirement.dto';
+import { PermissionService, Permission } from '../auth/permission.service';
 
 @Injectable()
 export class RequirementService {

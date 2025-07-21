@@ -4,8 +4,8 @@ import {
   CreateDatabaseSchemaDto,
   CreateDatabaseTableDto,
   CreateTableColumnDto,
-} from '../dto/create-database-structure.dto';
-import { PermissionService, Permission } from '../../auth/permission.service';
+} from './dto/create-database-structure.dto';
+import { PermissionService, Permission } from '../auth/permission.service';
 
 @Injectable()
 export class DatabaseStructureService {

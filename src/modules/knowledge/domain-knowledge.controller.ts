@@ -10,14 +10,14 @@ import {
   Query,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
-import { DomainKnowledgeService } from './services/domain-knowledge.service';
+import { DomainKnowledgeService } from './domain-knowledge.service';
 import {
   CreateDomainKnowledgeDto,
   CreateDomainConceptDto,
   CreateDomainPatternDto,
   CreateDomainBestPracticeDto,
 } from './dto/create-domain-knowledge.dto';
-import { DomainKnowledgeResponseDto } from './dto/documentation-response.dto';
+import { DomainKnowledgeResponseDto } from '../documentation/dto/documentation-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser, CurrentUserData } from '../auth/decorators/current-user.decorator';
 

@@ -9,11 +9,11 @@ import {
   RequirementPriority,
   RequirementStatus,
   RequirementSource,
-} from './create-requirement.dto';
-import { KnowledgeCategory } from './create-domain-knowledge.dto';
-import { ArchitectureStatus } from './create-architecture.dto';
-import { ApiMethod, ApiStatus } from './create-api-design.dto';
-import { DatabaseEngine } from './create-database-structure.dto';
+} from '../../requirements/dto/create-requirement.dto';
+import { KnowledgeCategory } from '../../knowledge/dto/create-domain-knowledge.dto';
+import { ArchitectureStatus } from '../../architecture/dto/create-architecture.dto';
+import { ApiMethod, ApiStatus } from '../../api-design/dto/create-api-design.dto';
+import { DatabaseEngine } from '../../database-design/dto/create-database-structure.dto';
 
 export class DocumentationResponseDto {
   @ApiProperty()

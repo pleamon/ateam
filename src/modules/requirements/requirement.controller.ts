@@ -10,13 +10,13 @@ import {
   Query,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
-import { RequirementService } from './services/requirement.service';
+import { RequirementService } from './requirement.service';
 import {
   CreateRequirementDto,
   CreateRequirementQuestionDto,
   RequirementStatus,
 } from './dto/create-requirement.dto';
-import { RequirementResponseDto } from './dto/documentation-response.dto';
+import { RequirementResponseDto } from '../documentation/dto/documentation-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser, CurrentUserData } from '../auth/decorators/current-user.decorator';
 

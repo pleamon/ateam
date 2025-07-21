@@ -10,13 +10,13 @@ import {
   Query,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
-import { DatabaseStructureService } from './services/database-structure.service';
+import { DatabaseStructureService } from './database-structure.service';
 import {
   CreateDatabaseSchemaDto,
   CreateDatabaseTableDto,
   CreateTableColumnDto,
 } from './dto/create-database-structure.dto';
-import { DatabaseSchemaResponseDto } from './dto/documentation-response.dto';
+import { DatabaseSchemaResponseDto } from '../documentation/dto/documentation-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser, CurrentUserData } from '../auth/decorators/current-user.decorator';
 

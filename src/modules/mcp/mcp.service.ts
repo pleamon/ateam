@@ -6,12 +6,12 @@ import { TeamService } from '../team/team.service';
 import { TaskService } from '../scrum/task.service';
 import { SprintService } from '../scrum/sprint.service';
 import { DocumentationService } from '../documentation/services/documentation.service';
-import { RequirementService } from '../documentation/services/requirement.service';
-import { ArchitectureService } from '../documentation/services/architecture.service';
-import { ApiDesignService } from '../documentation/services/api-design.service';
+import { RequirementService } from '../requirements/requirement.service';
+import { ArchitectureService } from '../architecture/architecture.service';
+import { ApiDesignService } from '../api-design/api-design.service';
 import { MindMapService } from '../documentation/services/mindmap.service';
-import { DomainKnowledgeService } from '../documentation/services/domain-knowledge.service';
-import { DatabaseStructureService } from '../documentation/services/database-structure.service';
+import { DomainKnowledgeService } from '../knowledge/domain-knowledge.service';
+import { DatabaseStructureService } from '../database-design/database-structure.service';
 import { RoadmapService } from '../roadmap/roadmap.service';
 import {
   JsonRpcRequestDto,

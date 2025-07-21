@@ -4,8 +4,8 @@ import {
   CreateSystemArchitectureDto,
   CreatePlatformArchitectureDto,
   ArchitectureStatus,
-} from '../dto/create-architecture.dto';
-import { PermissionService, Permission } from '../../auth/permission.service';
+} from './dto/create-architecture.dto';
+import { PermissionService, Permission } from '../auth/permission.service';
 
 @Injectable()
 export class ArchitectureService {

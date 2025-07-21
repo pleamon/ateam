@@ -10,9 +10,9 @@ import {
   Query,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
-import { ApiDesignService } from './services/api-design.service';
+import { ApiDesignService } from './api-design.service';
 import { CreateApiDesignDto, CreateApiExampleDto, ApiStatus } from './dto/create-api-design.dto';
-import { ApiDesignResponseDto } from './dto/documentation-response.dto';
+import { ApiDesignResponseDto } from '../documentation/dto/documentation-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser, CurrentUserData } from '../auth/decorators/current-user.decorator';
 

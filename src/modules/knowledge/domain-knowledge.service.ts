@@ -5,8 +5,8 @@ import {
   CreateDomainConceptDto,
   CreateDomainPatternDto,
   CreateDomainBestPracticeDto,
-} from '../dto/create-domain-knowledge.dto';
-import { PermissionService, Permission } from '../../auth/permission.service';
+} from './dto/create-domain-knowledge.dto';
+import { PermissionService, Permission } from '../auth/permission.service';
 
 @Injectable()
 export class DomainKnowledgeService {

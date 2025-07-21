@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '@shared/prisma/prisma.service';
-import { CreateApiDesignDto, CreateApiExampleDto, ApiStatus } from '../dto/create-api-design.dto';
-import { PermissionService, Permission } from '../../auth/permission.service';
+import { CreateApiDesignDto, CreateApiExampleDto, ApiStatus } from './dto/create-api-design.dto';
+import { PermissionService, Permission } from '../auth/permission.service';
 
 @Injectable()
 export class ApiDesignService {
