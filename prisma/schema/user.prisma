@@ -1,35 +1,45 @@
 model User {
-    id                   String                 @id @default(uuid())
-    email                String                 @unique
-    username             String                 @unique
-    password             String                 // 加密后的密码
-    name                 String?
-    avatar               String?
-    role                 UserRole               @default(USER)
-    isActive             Boolean                @default(true)
-    lastLoginAt          DateTime?
-    createdAt            DateTime               @default(now())
-    updatedAt            DateTime               @updatedAt
-    
+    id          String    @id @default(uuid())
+    email       String    @unique
+    username    String    @unique
+    password    String // 加密后的密码
+    name        String?
+    avatar      String?
+    role        UserRole  @default(USER)
+    isActive    Boolean   @default(true)
+    lastLoginAt DateTime?
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
+
     // 关联
-    projects             Project[]              // 用户创建的项目
-    projectMembers       ProjectMember[]        // 用户参与的项目
-    sessions             Session[]              // 用户会话
-    auditLogs           AuditLog[]             // 审计日志
+    projects                  Project[] // 用户创建的项目
+    projectMembers            ProjectMember[] // 用户参与的项目
+    sessions                  Session[] // 用户会话
+    auditLogs                 AuditLog[] // 审计日志
+    DomainKnowledge           DomainKnowledge[]
+    DatabaseSchema            DatabaseSchema[]
+    Requirement               Requirement[]
+    RequirementAttachment     RequirementAttachment[]
+    Documentation             Documentation[]
+    DocumentVersion           DocumentVersion[]
+    DocumentComment           DocumentComment[]
+    DocumentAttachment        DocumentAttachment[]
+    MindMap                   MindMap[]
+    ArchitectureChangeHistory ArchitectureChangeHistory[]
 
     @@schema("user")
 }
 
 model Session {
-    id                   String                 @id @default(uuid())
-    userId               String
-    user                 User                   @relation(fields: [userId], references: [id])
-    token                String                 @unique
-    ipAddress            String?
-    userAgent            String?
-    expiresAt            DateTime
-    createdAt            DateTime               @default(now())
-    updatedAt            DateTime               @updatedAt
+    id        String   @id @default(uuid())
+    userId    String
+    user      User     @relation(fields: [userId], references: [id])
+    token     String   @unique
+    ipAddress String?
+    userAgent String?
+    expiresAt DateTime
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 
     @@index([userId])
     @@index([token])
@@ -37,15 +47,15 @@ model Session {
 }
 
 model ProjectMember {
-    id                   String                 @id @default(uuid())
-    projectId            String
-    project              Project                @relation(fields: [projectId], references: [id])
-    userId               String
-    user                 User                   @relation(fields: [userId], references: [id])
-    role                 ProjectRole            @default(MEMBER)
-    permissions          String[]               // 具体权限列表
-    joinedAt             DateTime               @default(now())
-    updatedAt            DateTime               @updatedAt
+    id          String      @id @default(uuid())
+    projectId   String
+    project     Project     @relation(fields: [projectId], references: [id])
+    userId      String
+    user        User        @relation(fields: [userId], references: [id])
+    role        ProjectRole @default(MEMBER)
+    permissions String[] // 具体权限列表
+    joinedAt    DateTime    @default(now())
+    updatedAt   DateTime    @updatedAt
 
     @@unique([projectId, userId])
     @@index([projectId])
@@ -54,16 +64,16 @@ model ProjectMember {
 }
 
 model AuditLog {
-    id                   String                 @id @default(uuid())
-    userId               String?
-    user                 User?                  @relation(fields: [userId], references: [id])
-    action               String                 // 操作类型
-    resource             String                 // 资源类型
-    resourceId           String?                // 资源ID
-    details              Json?                  // 详细信息
-    ipAddress            String?
-    userAgent            String?
-    createdAt            DateTime               @default(now())
+    id         String   @id @default(uuid())
+    userId     String?
+    user       User?    @relation(fields: [userId], references: [id])
+    action     String // 操作类型
+    resource   String // 资源类型
+    resourceId String? // 资源ID
+    details    Json? // 详细信息
+    ipAddress  String?
+    userAgent  String?
+    createdAt  DateTime @default(now())
 
     @@index([userId])
     @@index([resource])

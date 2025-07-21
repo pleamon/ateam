@@ -1,0 +1,130 @@
+enum RequirementType {
+    FUNCTIONAL // 功能需求
+    NON_FUNCTIONAL // 非功能需求
+    BUSINESS // 业务需求
+    TECHNICAL // 技术需求
+
+    @@schema("requirements")
+}
+
+enum RequirementPriority {
+    HIGH // 高优先级
+    MEDIUM // 中优先级
+    LOW // 低优先级
+
+    @@schema("requirements")
+}
+
+enum RequirementStatus {
+    DRAFT // 草稿
+    REVIEWING // 评审中
+    CONFIRMED // 已确认
+    IMPLEMENTED // 已实现
+    DEPRECATED // 已废弃
+
+    @@schema("requirements")
+}
+
+enum RequirementSource {
+    CUSTOMER // 客户
+    PRODUCT // 产品
+    TECHNICAL // 技术
+    INTERNAL // 内部
+
+    @@schema("requirements")
+}
+
+model Requirement {
+    id        String              @id @default(uuid())
+    projectId String
+    project   Project             @relation(fields: [projectId], references: [id])
+    title     String // 需求标题
+    content   String // 需求详细内容
+    type      RequirementType // 需求类型
+    priority  RequirementPriority // 优先级
+    status    RequirementStatus   @default(DRAFT) // 状态
+    source    RequirementSource // 需求来源
+
+    // 层级关系
+    parentId String?
+    parent   Requirement?  @relation("RequirementHierarchy", fields: [parentId], references: [id])
+    children Requirement[] @relation("RequirementHierarchy")
+
+    // 关联
+    questions   RequirementQuestion[] // 相关问题
+    attachments RequirementAttachment[] // 附件
+
+    // 版本控制
+    version Int @default(1) // 版本号
+
+    // 时间戳
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    deletedAt DateTime? // 软删除
+    User      User?     @relation(fields: [userId], references: [id])
+    userId    String?
+
+    @@index([projectId])
+    @@index([status])
+    @@index([priority])
+    @@schema("requirements")
+}
+
+enum QuestionStatus {
+    TODO // 待处理
+    IN_PROGRESS // 处理中
+    DONE // 已完成
+
+    @@schema("requirements")
+}
+
+enum QuestionPriority {
+    URGENT // 紧急
+    HIGH // 高
+    MEDIUM // 中
+    LOW // 低
+
+    @@schema("requirements")
+}
+
+model RequirementQuestion {
+    id            String      @id @default(uuid())
+    requirementId String // 关联需求
+    requirement   Requirement @relation(fields: [requirementId], references: [id])
+
+    question  String // 问题内容
+    answer    String? // 答案
+    status    QuestionStatus   @default(TODO) // 状态
+    priority  QuestionPriority @default(MEDIUM) // 优先级
+    clarified Boolean          @default(false) // 是否已澄清
+
+    agentId String // 关联agent
+    agent   Agent  @relation("RequirementQuestionAgent", fields: [agentId], references: [id])
+
+    // 时间戳
+    createdAt  DateTime  @default(now())
+    updatedAt  DateTime  @updatedAt
+    answeredAt DateTime? // 回答时间
+
+    @@index([requirementId])
+    @@index([status])
+    @@schema("requirements")
+}
+
+model RequirementAttachment {
+    id            String      @id @default(uuid())
+    requirementId String // 关联需求
+    requirement   Requirement @relation(fields: [requirementId], references: [id])
+
+    fileName String // 文件名
+    fileUrl  String // 文件URL
+    fileSize Int // 文件大小（字节）
+    mimeType String // MIME类型
+
+    createdAt DateTime @default(now())
+    User      User?    @relation(fields: [userId], references: [id])
+    userId    String?
+
+    @@index([requirementId])
+    @@schema("requirements")
+}

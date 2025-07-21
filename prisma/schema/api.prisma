@@ -1,0 +1,150 @@
+enum ApiMethod {
+    GET
+    POST
+    PUT
+    DELETE
+    PATCH
+    OPTIONS
+    HEAD
+
+    @@schema("api")
+}
+
+enum ApiContentType {
+    APPLICATION_JSON // application/json
+    APPLICATION_XML // application/xml
+    APPLICATION_FORM_URLENCODED // application/x-www-form-urlencoded
+    MULTIPART_FORM_DATA // multipart/form-data
+    TEXT_PLAIN // text/plain
+
+    @@schema("api")
+}
+
+enum ApiAuthType {
+    NONE // 无需认证
+    BASIC // Basic Auth
+    BEARER // Bearer Token
+    API_KEY // API Key
+    OAUTH2 // OAuth 2.0
+    CUSTOM // 自定义
+
+    @@schema("api")
+}
+
+enum ApiStatus {
+    DRAFT // 草稿
+    ACTIVE // 活跃
+    DEPRECATED // 已废弃
+    RETIRED // 已停用
+
+    @@schema("api")
+}
+
+model ApiDesign {
+    id        String  @id @default(uuid())
+    projectId String
+    project   Project @relation(fields: [projectId], references: [id])
+
+    // 基本信息
+    apiName    String // API名称
+    apiPath    String // API路径
+    apiMethod  ApiMethod // 请求方法
+    apiVersion String    @default("1.0.0") // API版本
+    platform   String // 所属平台
+    module     String? // 所属模块
+
+    // 描述信息
+    apiDescription String // API描述
+    businessLogic  String? // 业务逻辑说明
+
+    // 请求响应
+    apiContentType  ApiContentType @default(APPLICATION_JSON) // 内容类型
+    requestHeaders  Json? // 请求头定义
+    requestParams   Json? // 请求参数定义（query/path）
+    requestBody     Json? // 请求体定义
+    responseHeaders Json? // 响应头定义
+    responseBody    Json? // 响应体定义
+
+    // 认证授权
+    authentication ApiAuthType @default(NONE) // 认证方式
+    authDetails    Json? // 认证详情
+    permissions    String[] // 所需权限
+
+    // 性能限制
+    rateLimit      Int? // 速率限制（请求/分钟）
+    timeout        Int? // 超时时间（毫秒）
+    maxPayloadSize Int? // 最大载荷大小（字节）
+
+    // 状态管理
+    status          ApiStatus @default(DRAFT) // API状态
+    deprecated      Boolean   @default(false) // 是否已废弃
+    deprecationDate DateTime? // 废弃日期
+    sunsetDate      DateTime? // 停用日期
+
+    // 关联
+    examples   ApiExample[] // 示例
+    errorCodes ApiErrorCode[] // 错误码
+
+    // 版本控制
+    version Int @default(1)
+
+    // 时间戳
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    deletedAt DateTime? // 软删除
+
+    @@unique([apiPath, apiMethod, apiVersion])
+    @@index([projectId])
+    @@index([platform])
+    @@index([status])
+    @@schema("api")
+}
+
+model ApiExample {
+    id          String    @id @default(uuid())
+    apiDesignId String
+    apiDesign   ApiDesign @relation(fields: [apiDesignId], references: [id])
+
+    name        String // 示例名称
+    description String // 示例描述
+
+    // 请求示例
+    requestUrl     String // 完整请求URL
+    requestHeaders Json? // 请求头示例
+    requestParams  Json? // 请求参数示例
+    requestBody    Json? // 请求体示例
+
+    // 响应示例
+    responseStatus  Int // 响应状态码
+    responseHeaders Json? // 响应头示例
+    responseBody    Json? // 响应体示例
+
+    // 其他
+    notes     String? // 备注
+    isSuccess Boolean @default(true) // 是否成功示例
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([apiDesignId])
+    @@schema("api")
+}
+
+model ApiErrorCode {
+    id          String    @id @default(uuid())
+    apiDesignId String
+    apiDesign   ApiDesign @relation(fields: [apiDesignId], references: [id])
+
+    code        String // 错误码
+    httpStatus  Int // HTTP状态码
+    message     String // 错误信息
+    description String // 详细描述
+    solution    String? // 解决方案
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@unique([apiDesignId, code])
+    @@index([apiDesignId])
+    @@schema("api")
+}

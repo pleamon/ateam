@@ -1,138 +1,230 @@
+enum DocumentType {
+    OVERVIEW // 概览
+    TECHNICAL // 技术文档
+    DESIGN // 设计文档
+    RESEARCH // 研究文档
+    USER_GUIDE // 用户指南
+    API_DOC // API文档
+    OTHER // 其他
+
+    @@schema("documentation")
+}
+
+enum DocumentStatus {
+    DRAFT // 草稿
+    REVIEWING // 评审中
+    PUBLISHED // 已发布
+    ARCHIVED // 已归档
+
+    @@schema("documentation")
+}
+
+enum DocumentVisibility {
+    PUBLIC // 公开
+    INTERNAL // 内部
+    PRIVATE // 私有
+
+    @@schema("documentation")
+}
+
 model Documentation {
-    id        String   @id @default(uuid())
+    id        String  @id @default(uuid())
     projectId String
-    project   Project  @relation(fields: [projectId], references: [id])
-    name      String
-    content   String
-    type      String   @default("overview") // overview, technical, design, research, other
-    url       String?
+    project   Project @relation(fields: [projectId], references: [id])
+
+    // 基本信息
+    title      String // 文档标题
+    content    String // 文档内容
+    summary    String? // 摘要
+    type       DocumentType       @default(OVERVIEW) // 文档类型
+    status     DocumentStatus     @default(DRAFT) // 状态
+    visibility DocumentVisibility @default(INTERNAL) // 可见性
+
+    // 分类和标签
+    category String? // 分类
+    tags     DocumentTag[] // 标签
+
+    // 外部链接
+    url String? // 外部文档URL
+
+    // 版本管理
+    version  String            @default("1.0.0") // 版本号
+    versions DocumentVersion[] // 历史版本
+
+    // 关联
+    comments    DocumentComment[] // 评论
+    attachments DocumentAttachment[] // 附件
+
+    // 内部版本控制
+    versionNumber Int @default(1) // 内部版本号（乐观锁）
+
+    // 时间戳
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
+    publishedAt DateTime? // 发布时间
+    deletedAt   DateTime? // 软删除
+    User        User?     @relation(fields: [userId], references: [id])
+    userId      String?
+
+    @@index([projectId])
+    @@index([type])
+    @@index([status])
+    @@index([category])
+    @@schema("documentation")
+}
+
+model DocumentVersion {
+    id              String        @id @default(uuid())
+    documentationId String
+    documentation   Documentation @relation(fields: [documentationId], references: [id])
+
+    version   String // 版本号
+    content   String // 版本内容
+    changeLog String // 变更说明
+
+    createdAt DateTime @default(now())
+    User      User?    @relation(fields: [userId], references: [id])
+    userId    String?
+
+    @@index([documentationId])
+    @@index([version])
+    @@schema("documentation")
+}
+
+model DocumentTag {
+    id          String  @id @default(uuid())
+    name        String  @unique // 标签名称
+    description String? // 标签描述
+    color       String? // 标签颜色
+
+    // 关联文档
+    documentations Documentation[] // 使用此标签的文档
+
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
     @@schema("documentation")
 }
 
-model Requirement {
-    id        String   @id @default(uuid())
-    projectId String
-    project   Project  @relation(fields: [projectId], references: [id])
-    content   String
+model DocumentComment {
+    id              String        @id @default(uuid())
+    documentationId String
+    documentation   Documentation @relation(fields: [documentationId], references: [id])
+
+    content String // 评论内容
+
+    // 层级关系（支持回复）
+    parentId String?
+    parent   DocumentComment?  @relation("CommentReplies", fields: [parentId], references: [id])
+    replies  DocumentComment[] @relation("CommentReplies")
+
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
+    User      User?    @relation(fields: [userId], references: [id])
+    userId    String?
 
+    @@index([documentationId])
+    @@index([parentId])
     @@schema("documentation")
 }
 
-model RequirementQuestion {
-    id        String   @id @default(uuid())
-    projectId String
-    project   Project  @relation(fields: [projectId], references: [id])
-    question  String
-    answer    String
-    status    String   @default("todo") // todo, in_progress, done
-    clarified Boolean  @default(false)
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+model DocumentAttachment {
+    id              String        @id @default(uuid())
+    documentationId String
+    documentation   Documentation @relation(fields: [documentationId], references: [id])
 
+    fileName String // 文件名
+    fileUrl  String // 文件URL
+    fileSize Int // 文件大小（字节）
+    mimeType String // MIME类型
+
+    createdAt DateTime @default(now())
+    User      User?    @relation(fields: [userId], references: [id])
+    userId    String?
+
+    @@index([documentationId])
     @@schema("documentation")
 }
 
-model DomainKnowledge {
-    id             String   @id @default(uuid())
-    projectId      String
-    project        Project  @relation(fields: [projectId], references: [id])
-    domain         String
-    concepts       String[] // 概念
-    commonPatterns String[] // 常见模式
-    bestPractices  String[] // 最佳实践
-    antiPatterns   String[] // 反模式
-    createdAt      DateTime @default(now())
-    updatedAt      DateTime @updatedAt
+enum NodeType {
+    ROOT // 根节点
+    TOPIC // 主题
+    SUBTOPIC // 子主题
+    DETAIL // 详情
+    REFERENCE // 引用
 
     @@schema("documentation")
 }
 
 model MindMap {
-    id        String   @id @default(uuid())
+    id        String  @id @default(uuid())
     projectId String
-    project   Project  @relation(fields: [projectId], references: [id])
-    overview  String
-    content   String
+    project   Project @relation(fields: [projectId], references: [id])
+
+    title       String // 思维导图标题
+    description String? // 描述
+    overview    String // 概览说明
+
+    // 根节点
+    nodeId   String?      @unique
+    rootNode MindMapNode? @relation("RootNode", fields: [nodeId], references: [id])
+
+    // 所有节点
+    nodes MindMapNode[] @relation("MindMapNodes")
+
+    // 样式配置
+    theme  Json? // 主题配置
+    layout String @default("tree") // 布局方式
+
+    // 版本控制
+    version Int @default(1)
+
+    // 时间戳
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    deletedAt DateTime? // 软删除
+    User      User?     @relation(fields: [userId], references: [id])
+    userId    String?
+
+    @@index([projectId])
+    @@schema("documentation")
+}
+
+model MindMapNode {
+    id String @id @default(uuid())
+
+    // 所属思维导图
+    mindMapId String
+    mindMap   MindMap @relation("MindMapNodes", fields: [mindMapId], references: [id])
+
+    // 作为根节点的思维导图（可选）
+    rootOfMap MindMap? @relation("RootNode")
+
+    // 节点内容
+    content  String // 节点文本
+    note     String? // 备注
+    nodeType NodeType @default(TOPIC) // 节点类型
+
+    // 层级关系
+    parentId String?
+    parent   MindMapNode?  @relation("NodeHierarchy", fields: [parentId], references: [id])
+    children MindMapNode[] @relation("NodeHierarchy")
+
+    // 位置和样式
+    position Int // 同级排序
+    expanded Boolean @default(true) // 是否展开
+    style    Json? // 节点样式
+
+    // 附加信息
+    link     String? // 链接
+    icon     String? // 图标
+    priority Int? // 优先级
+    progress Int? // 进度（0-100）
+
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
-    @@schema("documentation")
-}
-
-model SystemArchitecture {
-    id                    String                 @id @default(uuid())
-    projectId             String
-    project               Project                @relation(fields: [projectId], references: [id])
-    overview              String // 技术架构总览
-    // 针对每个平台的架构描述，允许存储多平台的架构细节
-    platformArchitectures PlatformArchitecture[] // 每个平台的技术架构详情
-    platforms             String[] // 支持的平台（如 web, mobile, desktop 等）
-    components            String[] // 主要组件
-    technologies          String[] // 关键技术栈
-    diagrams              String? // 架构图（可选，存储为URL或Base64）
-    notes                 String? // 备注
-    createdAt             DateTime               @default(now())
-    updatedAt             DateTime               @updatedAt
-
-    @@schema("documentation")
-}
-
-model PlatformArchitecture {
-    id                   String             @id @default(uuid())
-    systemArchitectureId String
-    systemArchitecture   SystemArchitecture @relation(fields: [systemArchitectureId], references: [id])
-    platform             String // 平台名称（如 web, mobile, desktop 等）
-    frontend             String? // 前端架构描述（可选）
-    backend              String? // 后端架构描述（可选）
-    technologies         String[] // 该平台的关键技术栈
-    components           String[] // 该平台的主要组件
-    diagrams             String? // 该平台的架构图（可选，存储为URL或Base64）
-    notes                String? // 备注
-    createdAt            DateTime           @default(now())
-    updatedAt            DateTime           @updatedAt
-
-    @@schema("documentation")
-}
-
-model ApiDesign {
-    id             String   @id @default(uuid())
-    projectId      String
-    project        Project  @relation(fields: [projectId], references: [id])
-    platform       String
-    apiName        String
-    apiPath        String
-    apiMethod      String   @default("GET") // GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD
-    apiContentType String   @default("application/json") // application/json, application/xml, application/x-www-form-urlencoded, multipart/form-data, text/plain
-    apiDescription String
-    requestFields  String
-    responseFields String
-    createdAt      DateTime @default(now())
-    updatedAt      DateTime @updatedAt
-
-    @@schema("documentation")
-}
-
-model DataStructure {
-    id                 String   @id @default(uuid())
-    projectId          String
-    project            Project  @relation(fields: [projectId], references: [id])
-    schemaName         String
-    tableName          String
-    columnName         String
-    columnType         String
-    columnDescription  String
-    columnDefaultValue String
-    columnIsNullable   Boolean
-    columnIsUnique     Boolean
-    columnIsPrimaryKey Boolean
-    columnIsForeignKey Boolean
-    createdAt          DateTime @default(now())
-    updatedAt          DateTime @updatedAt
-
+    @@index([mindMapId])
+    @@index([parentId])
     @@schema("documentation")
 }

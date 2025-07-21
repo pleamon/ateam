@@ -1,0 +1,102 @@
+enum ArchitectureStatus {
+    DRAFT // 草稿
+    REVIEWING // 评审中
+    APPROVED // 已批准
+    DEPRECATED // 已废弃
+
+    @@schema("architecture")
+}
+
+model SystemArchitecture {
+    id        String  @id @default(uuid())
+    projectId String
+    project   Project @relation(fields: [projectId], references: [id])
+
+    name     String // 架构名称
+    overview String // 技术架构总览
+    version  String // 版本号（如 1.0.0）
+    status   ArchitectureStatus @default(DRAFT) // 状态
+
+    // 架构信息
+    platforms    String[] // 支持的平台（如 web, mobile, desktop 等）
+    components   String[] // 主要组件
+    technologies String[] // 关键技术栈
+    diagrams     String? // 架构图（URL或Base64）
+    notes        String? // 备注
+
+    // 关联
+    platformArchitectures PlatformArchitecture[] // 每个平台的技术架构详情
+    changeHistories       ArchitectureChangeHistory[] // 变更历史
+
+    // 版本控制
+    versionNumber     Int                  @default(1) // 内部版本号
+    previousVersionId String? // 上一个版本ID
+    previousVersion   SystemArchitecture?  @relation("ArchitectureVersioning", fields: [previousVersionId], references: [id])
+    nextVersions      SystemArchitecture[] @relation("ArchitectureVersioning")
+
+    // 时间戳
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    deletedAt DateTime? // 软删除
+
+    @@index([projectId])
+    @@index([status])
+    @@index([version])
+    @@schema("architecture")
+}
+
+model PlatformArchitecture {
+    id                   String             @id @default(uuid())
+    systemArchitectureId String
+    systemArchitecture   SystemArchitecture @relation(fields: [systemArchitectureId], references: [id])
+
+    platform    String // 平台名称（如 web, mobile, desktop 等）
+    displayName String // 显示名称
+    description String // 平台架构描述
+
+    // 架构详情
+    frontend       Json? // 前端架构描述（结构化JSON）
+    backend        Json? // 后端架构描述（结构化JSON）
+    infrastructure Json? // 基础设施描述（结构化JSON）
+
+    technologies String[] // 该平台的关键技术栈
+    components   String[] // 该平台的主要组件
+    dependencies Json? // 依赖关系（结构化JSON）
+
+    // 部署信息
+    deploymentStrategy String? // 部署策略
+    scalingStrategy    String? // 扩展策略
+
+    diagrams String? // 该平台的架构图（URL或Base64）
+    notes    String? // 备注
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([systemArchitectureId])
+    @@index([platform])
+    @@schema("architecture")
+}
+
+model ArchitectureChangeHistory {
+    id             String             @id @default(uuid())
+    architectureId String
+    architecture   SystemArchitecture @relation(fields: [architectureId], references: [id])
+
+    changeType        String // 变更类型（新增/修改/删除）
+    changeDescription String // 变更描述
+    changeReason      String // 变更原因
+    impact            String? // 影响分析
+
+    // 变更内容快照
+    beforeChange Json? // 变更前内容
+    afterChange  Json? // 变更后内容
+
+    changedAt DateTime @default(now())
+    User      User?    @relation(fields: [userId], references: [id])
+    userId    String?
+
+    @@index([architectureId])
+    @@index([changedAt])
+    @@schema("architecture")
+}

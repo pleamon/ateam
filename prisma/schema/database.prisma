@@ -1,0 +1,220 @@
+enum DatabaseEngine {
+    MYSQL
+    POSTGRESQL
+    SQLITE
+    MONGODB
+    REDIS
+    ELASTICSEARCH
+
+    @@schema("database")
+}
+
+enum ColumnType {
+    // 数值类型
+    INT
+    BIGINT
+    DECIMAL
+    FLOAT
+    DOUBLE
+
+    // 字符串类型
+    VARCHAR
+    CHAR
+    TEXT
+    LONGTEXT
+
+    // 日期时间类型
+    DATE
+    TIME
+    DATETIME
+    TIMESTAMP
+
+    // 二进制类型
+    BINARY
+    VARBINARY
+    BLOB
+
+    // 其他类型
+    BOOLEAN
+    JSON
+    UUID
+    ENUM
+
+    @@schema("database")
+}
+
+enum IndexType {
+    PRIMARY // 主键索引
+    UNIQUE // 唯一索引
+    INDEX // 普通索引
+    FULLTEXT // 全文索引
+    SPATIAL // 空间索引
+
+    @@schema("database")
+}
+
+enum RelationType {
+    ONE_TO_ONE // 一对一
+    ONE_TO_MANY // 一对多
+    MANY_TO_ONE // 多对一
+    MANY_TO_MANY // 多对多
+
+    @@schema("database")
+}
+
+model DatabaseSchema {
+    id        String  @id @default(uuid())
+    projectId String
+    project   Project @relation(fields: [projectId], references: [id])
+
+    schemaName  String // 数据库名称
+    engine      DatabaseEngine // 数据库引擎
+    charset     String         @default("utf8mb4") // 字符集
+    collation   String         @default("utf8mb4_unicode_ci") // 排序规则
+    description String? // 描述
+
+    // 关联
+    tables DatabaseTable[] // 数据表
+
+    // 版本控制
+    version Int @default(1)
+
+    // 时间戳
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    deletedAt DateTime? // 软删除
+    User      User?     @relation(fields: [userId], references: [id])
+    userId    String?
+
+    @@unique([projectId, schemaName])
+    @@index([projectId])
+    @@schema("database")
+}
+
+model DatabaseTable {
+    id       String         @id @default(uuid())
+    schemaId String
+    schema   DatabaseSchema @relation(fields: [schemaId], references: [id])
+
+    tableName   String // 表名
+    displayName String // 显示名称
+    description String? // 描述
+    engine      String? // 存储引擎（MySQL特有）
+    charset     String? // 字符集
+    collation   String? // 排序规则
+
+    // 表选项
+    autoIncrement Int? // 自增起始值
+    comment       String? // 表注释
+
+    // 关联
+    columns TableColumn[] // 列
+    indexes DatabaseIndex[] // 索引
+
+    // 关系（作为源表）
+    sourceRelations DatabaseRelation[] @relation("SourceTable")
+    // 关系（作为目标表）
+    targetRelations DatabaseRelation[] @relation("TargetTable")
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@unique([schemaId, tableName])
+    @@index([schemaId])
+    @@schema("database")
+}
+
+model TableColumn {
+    id      String        @id @default(uuid())
+    tableId String
+    table   DatabaseTable @relation(fields: [tableId], references: [id])
+
+    columnName  String // 列名
+    displayName String // 显示名称
+    columnType  ColumnType // 数据类型
+    length      Int? // 长度
+    precision   Int? // 精度（小数总位数）
+    scale       Int? // 标度（小数位数）
+
+    // 约束
+    isPrimaryKey    Boolean @default(false) // 是否主键
+    isNullable      Boolean @default(true) // 是否可空
+    isUnique        Boolean @default(false) // 是否唯一
+    isAutoIncrement Boolean @default(false) // 是否自增
+
+    // 默认值和其他
+    defaultValue String? // 默认值
+    comment      String? // 注释
+    enumValues   String[] // 枚举值（当类型为ENUM时）
+
+    // 外键信息
+    isForeignKey     Boolean @default(false) // 是否外键
+    referencedTable  String? // 引用表
+    referencedColumn String? // 引用列
+    onDelete         String? // 删除时的操作
+    onUpdate         String? // 更新时的操作
+
+    // 排序
+    position Int // 列的位置
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@unique([tableId, columnName])
+    @@index([tableId])
+    @@schema("database")
+}
+
+model DatabaseIndex {
+    id      String        @id @default(uuid())
+    tableId String
+    table   DatabaseTable @relation(fields: [tableId], references: [id])
+
+    indexName String // 索引名称
+    indexType IndexType // 索引类型
+    columns   String[] // 索引列
+    isUnique  Boolean   @default(false) // 是否唯一索引
+    comment   String? // 注释
+
+    // 索引选项
+    algorithm  String? // 索引算法
+    lockOption String? // 锁选项
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@unique([tableId, indexName])
+    @@index([tableId])
+    @@schema("database")
+}
+
+model DatabaseRelation {
+    id       String @id @default(uuid())
+    schemaId String // 所属数据库
+
+    relationName String // 关系名称
+    relationType RelationType // 关系类型
+
+    // 源表信息
+    sourceTableId String
+    sourceTable   DatabaseTable @relation("SourceTable", fields: [sourceTableId], references: [id])
+    sourceColumns String[] // 源表列
+
+    // 目标表信息
+    targetTableId String
+    targetTable   DatabaseTable @relation("TargetTable", fields: [targetTableId], references: [id])
+    targetColumns String[] // 目标表列
+
+    // 约束
+    onDelete String? // 删除时的操作
+    onUpdate String? // 更新时的操作
+
+    description String? // 关系描述
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([sourceTableId])
+    @@index([targetTableId])
+    @@schema("database")
+}

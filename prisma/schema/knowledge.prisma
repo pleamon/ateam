@@ -1,0 +1,135 @@
+enum KnowledgeCategory {
+    BUSINESS // 业务知识
+    TECHNICAL // 技术知识
+    DOMAIN_SPECIFIC // 特定领域
+    GENERAL // 通用知识
+
+    @@schema("knowledge")
+}
+
+model DomainKnowledge {
+    id        String  @id @default(uuid())
+    projectId String
+    project   Project @relation(fields: [projectId], references: [id])
+
+    domain      String // 领域名称
+    description String // 领域描述
+    category    KnowledgeCategory // 知识分类
+
+    // 关联的知识项
+    concepts      DomainConcept[] // 概念
+    patterns      DomainPattern[] // 模式
+    bestPractices DomainBestPractice[] // 最佳实践
+    antiPatterns  DomainAntiPattern[] // 反模式
+    references    DomainReference[] // 参考资料
+
+    // 标签
+    tags String[] // 标签数组
+
+    // 版本控制
+    version Int @default(1)
+
+    // 时间戳
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    deletedAt DateTime? // 软删除
+    User      User?     @relation(fields: [userId], references: [id])
+    userId    String?
+
+    @@index([projectId])
+    @@index([domain])
+    @@index([category])
+    @@schema("knowledge")
+}
+
+model DomainConcept {
+    id                String          @id @default(uuid())
+    domainKnowledgeId String
+    domainKnowledge   DomainKnowledge @relation(fields: [domainKnowledgeId], references: [id])
+
+    name            String // 概念名称
+    definition      String // 概念定义
+    examples        String[] // 示例
+    relatedConcepts String[] // 相关概念
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([domainKnowledgeId])
+    @@schema("knowledge")
+}
+
+model DomainPattern {
+    id                String          @id @default(uuid())
+    domainKnowledgeId String
+    domainKnowledge   DomainKnowledge @relation(fields: [domainKnowledgeId], references: [id])
+
+    name         String // 模式名称
+    description  String // 模式描述
+    context      String // 适用场景
+    solution     String // 解决方案
+    consequences String // 结果影响
+    examples     String[] // 示例
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([domainKnowledgeId])
+    @@schema("knowledge")
+}
+
+model DomainBestPractice {
+    id                String          @id @default(uuid())
+    domainKnowledgeId String
+    domainKnowledge   DomainKnowledge @relation(fields: [domainKnowledgeId], references: [id])
+
+    title          String // 最佳实践标题
+    description    String // 描述
+    rationale      String // 原理说明
+    implementation String // 实施方法
+    benefits       String[] // 好处
+    considerations String[] // 注意事项
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([domainKnowledgeId])
+    @@schema("knowledge")
+}
+
+model DomainAntiPattern {
+    id                String          @id @default(uuid())
+    domainKnowledgeId String
+    domainKnowledge   DomainKnowledge @relation(fields: [domainKnowledgeId], references: [id])
+
+    name         String // 反模式名称
+    description  String // 描述
+    symptoms     String[] // 症状表现
+    causes       String[] // 产生原因
+    consequences String[] // 负面影响
+    refactoring  String // 重构方案
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([domainKnowledgeId])
+    @@schema("knowledge")
+}
+
+model DomainReference {
+    id                String          @id @default(uuid())
+    domainKnowledgeId String
+    domainKnowledge   DomainKnowledge @relation(fields: [domainKnowledgeId], references: [id])
+
+    title       String // 标题
+    type        String // 类型（书籍、文章、视频等）
+    url         String? // 链接
+    author      String? // 作者
+    publishDate DateTime? // 发布日期
+    summary     String? // 摘要
+
+    createdAt DateTime @default(now())
+
+    @@index([domainKnowledgeId])
+    @@schema("knowledge")
+}
