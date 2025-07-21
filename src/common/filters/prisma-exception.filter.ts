@@ -1,6 +1,6 @@
 import { ArgumentsHost, Catch, HttpStatus } from '@nestjs/common';
 import { BaseExceptionFilter } from '@nestjs/core';
-import { Prisma } from '../../../generated/prisma';
+import { Prisma } from '@generated/prisma';
 import { FastifyReply } from 'fastify';
 
 @Catch(Prisma.PrismaClientKnownRequestError)
@@ -13,11 +13,12 @@ export class PrismaClientExceptionFilter extends BaseExceptionFilter {
     let message = '数据库操作失败';
 
     switch (exception.code) {
-      case 'P2002':
+      case 'P2002': {
         status = HttpStatus.CONFLICT;
         const field = (exception.meta?.target as string[])?.[0];
         message = field ? `${field} 已存在` : '数据已存在';
         break;
+      }
       case 'P2025':
         status = HttpStatus.NOT_FOUND;
         message = '记录不存在';

@@ -1,4 +1,10 @@
-import { UserRole, ProjectRole, DocumentType, DocumentStatus, DocumentVisibility } from '../../generated/prisma';
+import {
+  UserRole,
+  ProjectRole,
+  DocumentType as PrismaDocumentType,
+  DocumentStatus,
+  DocumentVisibility,
+} from '@generated/prisma';
 
 // User fixtures
 export const mockUser = {
@@ -69,7 +75,7 @@ export const mockDocumentation = {
   title: 'Test Documentation',
   content: 'This is test content',
   summary: 'Test summary',
-  type: DocumentType.OVERVIEW,
+  type: PrismaDocumentType.OVERVIEW,
   status: DocumentStatus.DRAFT,
   visibility: DocumentVisibility.INTERNAL,
   category: 'general',

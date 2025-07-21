@@ -19,9 +19,7 @@ const testGroups = {
     'src/services/auth/session.service.spec.ts',
     'src/services/auth/project-member.service.spec.ts',
   ],
-  documentation: [
-    'src/services/documentation/documentation.service.spec.ts',
-  ],
+  documentation: ['src/services/documentation/documentation.service.spec.ts'],
   roadmap: [
     'src/services/roadmap/milestone.service.spec.ts',
     'src/services/roadmap/version.service.spec.ts',
@@ -50,8 +48,8 @@ async function runTestGroup(groupName: string, tests: string[]) {
   console.log(`\n🗂️  Running ${groupName} tests...`);
   const results = await Promise.all(tests.map(runTest));
   const passed = results.filter(Boolean).length;
-  const failed = results.filter(r => !r).length;
-  
+  const failed = results.filter((r) => !r).length;
+
   console.log(`\n📊 ${groupName} results: ${passed} passed, ${failed} failed`);
   return failed === 0;
 }
@@ -59,13 +57,13 @@ async function runTestGroup(groupName: string, tests: string[]) {
 // 运行所有测试
 async function runAllTests() {
   console.log('🚀 Starting test suite...\n');
-  
+
   const groupResults = [];
-  for (const [groupName, tests] of Object.entries(testGroups)) {
-    const success = await runTestGroup(groupName, tests);
-    groupResults.push({ group: groupName, success });
+  for (const [_groupName, tests] of Object.entries(testGroups)) {
+    const success = await runTestGroup(_groupName, tests);
+    groupResults.push({ group: _groupName, success });
   }
-  
+
   // 生成覆盖率报告
   console.log('\n📈 Generating coverage report...');
   try {
@@ -74,15 +72,15 @@ async function runAllTests() {
   } catch (error: any) {
     console.error('❌ Failed to generate coverage report:', error.message);
   }
-  
+
   // 总结
   console.log('\n📋 Test Summary:');
   console.log('================');
   groupResults.forEach(({ group, success }) => {
     console.log(`${success ? '✅' : '❌'} ${group}`);
   });
-  
-  const allPassed = groupResults.every(r => r.success);
+
+  const allPassed = groupResults.every((r) => r.success);
   if (allPassed) {
     console.log('\n✨ All tests passed!');
   } else {
@@ -94,8 +92,8 @@ async function runAllTests() {
 // 检查测试文件是否存在
 async function checkTestFiles() {
   console.log('🔍 Checking test files...\n');
-  
-  for (const [groupName, tests] of Object.entries(testGroups)) {
+
+  for (const [_groupName, tests] of Object.entries(testGroups)) {
     for (const testFile of tests) {
       const fullPath = path.join(process.cwd(), testFile);
       try {
@@ -111,7 +109,7 @@ async function checkTestFiles() {
 // 主函数
 async function main() {
   const args = process.argv.slice(2);
-  
+
   if (args.includes('--check')) {
     await checkTestFiles();
   } else if (args.includes('--group')) {

@@ -89,6 +89,8 @@ enum QuestionPriority {
 
 model RequirementQuestion {
     id            String      @id @default(uuid())
+    projectId     String // 关联项目
+    project       Project     @relation(fields: [projectId], references: [id])
     requirementId String // 关联需求
     requirement   Requirement @relation(fields: [requirementId], references: [id])
 
@@ -113,6 +115,8 @@ model RequirementQuestion {
 
 model RequirementAttachment {
     id            String      @id @default(uuid())
+    projectId     String // 关联项目
+    project       Project     @relation(fields: [projectId], references: [id])
     requirementId String // 关联需求
     requirement   Requirement @relation(fields: [requirementId], references: [id])
 

@@ -1,14 +1,13 @@
-import { seedAgentTemplates } from './agent-templates.seed.js';
-import { PrismaClient } from '../../generated/prisma';
+import { PrismaService } from '@shared/prisma/prisma.service';
 
-const prisma = new PrismaClient();
+const prisma = new PrismaService();
 
 export async function seedAllData() {
   console.log('开始导入种子数据...\n');
 
   try {
     // 导入 Agent 提示词模板
-    await seedAgentTemplates();
+    // await seedAgentTemplates();
 
     // 这里可以添加其他种子数据的导入
     // await seedOtherData();
@@ -21,7 +20,7 @@ export async function seedAllData() {
 }
 
 // 如果直接运行此文件
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (require.main === module) {
   seedAllData()
     .then(() => {
       console.log('种子数据导入完成');

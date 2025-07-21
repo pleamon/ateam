@@ -10,19 +10,21 @@ model Project {
     creator   User?           @relation(fields: [createdBy], references: [id])
     members   ProjectMember[] // 项目成员
 
-    tasks              Task[]
-    documentation      Documentation[]
-    MindMap            MindMap[]
-    Sprint             Sprint[]
-    Requirement        Requirement[]
-    DomainKnowledge    DomainKnowledge[]
-    SystemArchitecture SystemArchitecture[]
-    roadmaps           Roadmap[]
-    ApiDesign          ApiDesign[]
-    team               Team[]
-    Agent              Agent[]
-    AgentWorklog       AgentWorklog[]
-    DatabaseSchema     DatabaseSchema[]
+    tasks                 Task[]
+    documentation         Documentation[]
+    MindMap               MindMap[]
+    Sprint                Sprint[]
+    Requirement           Requirement[]
+    DomainKnowledge       DomainKnowledge[]
+    SystemArchitecture    SystemArchitecture[]
+    roadmaps              Roadmap[]
+    ApiDesign             ApiDesign[]
+    team                  Team[]
+    Agent                 Agent[]
+    AgentWorklog          AgentWorklog[]
+    DatabaseSchema        DatabaseSchema[]
+    RequirementQuestion   RequirementQuestion[]
+    RequirementAttachment RequirementAttachment[]
 
     @@schema("project")
 }

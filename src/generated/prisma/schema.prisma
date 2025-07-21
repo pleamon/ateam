@@ -1,0 +1,1322 @@
+model Agent {
+  id                  String                @id @default(uuid())
+  projectId           String
+  project             Project               @relation(fields: [projectId], references: [id])
+  teamId              String
+  team                Team                  @relation(fields: [teamId], references: [id])
+  name                String
+  description         String?
+  workPrompt          String?
+  responsibilities    String[]
+  skills              String[]
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  AgentActivity       AgentActivity[]
+  AgentTask           AgentTask[]
+  AgentWorklog        AgentWorklog[]
+  RequirementQuestion RequirementQuestion[] @relation("RequirementQuestionAgent")
+
+  @@schema("agent")
+}
+
+model AgentTask {
+  id        String   @id @default(uuid())
+  agentId   String
+  agent     Agent    @relation(fields: [agentId], references: [id])
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@schema("agent")
+}
+
+model AgentActivity {
+  id        String   @id @default(uuid())
+  agentId   String
+  agent     Agent    @relation(fields: [agentId], references: [id])
+  body      String
+  action    String   @default("agent_checkin") // agent_checkin, agent_checkout, agent_work, agent_submit_work
+  details   Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@schema("agent")
+}
+
+model AgentWorklog {
+  id        String   @id @default(uuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id])
+  agentId   String
+  agent     Agent    @relation(fields: [agentId], references: [id])
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id])
+  workType  String
+  summarize String?
+  nextPlan  String?
+  content   String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@schema("agent")
+}
+
+model AgentPromptTemplate {
+  id             String   @id @default(uuid())
+  name           String // 模板名称，如"前端开发工程师"
+  responsibility String // 对应的职责
+  prompt         String   @db.Text // 提示词内容
+  description    String? // 模板描述
+  isActive       Boolean  @default(true) // 是否启用
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@schema("agent")
+}
+
+enum ApiMethod {
+  GET
+  POST
+  PUT
+  DELETE
+  PATCH
+  OPTIONS
+  HEAD
+
+  @@schema("api")
+}
+
+enum ApiContentType {
+  APPLICATION_JSON // application/json
+  APPLICATION_XML // application/xml
+  APPLICATION_FORM_URLENCODED // application/x-www-form-urlencoded
+  MULTIPART_FORM_DATA // multipart/form-data
+  TEXT_PLAIN // text/plain
+
+  @@schema("api")
+}
+
+enum ApiAuthType {
+  NONE // 无需认证
+  BASIC // Basic Auth
+  BEARER // Bearer Token
+  API_KEY // API Key
+  OAUTH2 // OAuth 2.0
+  CUSTOM // 自定义
+
+  @@schema("api")
+}
+
+enum ApiStatus {
+  DRAFT // 草稿
+  ACTIVE // 活跃
+  DEPRECATED // 已废弃
+  RETIRED // 已停用
+
+  @@schema("api")
+}
+
+model ApiDesign {
+  id        String  @id @default(uuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id])
+
+  // 基本信息
+  apiName    String // API名称
+  apiPath    String // API路径
+  apiMethod  ApiMethod // 请求方法
+  apiVersion String    @default("1.0.0") // API版本
+  platform   String // 所属平台
+  module     String? // 所属模块
+
+  // 描述信息
+  apiDescription String // API描述
+  businessLogic  String? // 业务逻辑说明
+
+  // 请求响应
+  apiContentType  ApiContentType @default(APPLICATION_JSON) // 内容类型
+  requestHeaders  Json? // 请求头定义
+  requestParams   Json? // 请求参数定义（query/path）
+  requestBody     Json? // 请求体定义
+  responseHeaders Json? // 响应头定义
+  responseBody    Json? // 响应体定义
+
+  // 认证授权
+  authentication ApiAuthType @default(NONE) // 认证方式
+  authDetails    Json? // 认证详情
+  permissions    String[] // 所需权限
+
+  // 性能限制
+  rateLimit      Int? // 速率限制（请求/分钟）
+  timeout        Int? // 超时时间（毫秒）
+  maxPayloadSize Int? // 最大载荷大小（字节）
+
+  // 状态管理
+  status          ApiStatus @default(DRAFT) // API状态
+  deprecated      Boolean   @default(false) // 是否已废弃
+  deprecationDate DateTime? // 废弃日期
+  sunsetDate      DateTime? // 停用日期
+
+  // 关联
+  examples   ApiExample[] // 示例
+  errorCodes ApiErrorCode[] // 错误码
+
+  // 版本控制
+  version Int @default(1)
+
+  // 时间戳
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime? // 软删除
+
+  @@unique([apiPath, apiMethod, apiVersion])
+  @@index([projectId])
+  @@index([platform])
+  @@index([status])
+  @@schema("api")
+}
+
+model ApiExample {
+  id          String    @id @default(uuid())
+  apiDesignId String
+  apiDesign   ApiDesign @relation(fields: [apiDesignId], references: [id])
+
+  name        String // 示例名称
+  description String // 示例描述
+
+  // 请求示例
+  requestUrl     String // 完整请求URL
+  requestHeaders Json? // 请求头示例
+  requestParams  Json? // 请求参数示例
+  requestBody    Json? // 请求体示例
+
+  // 响应示例
+  responseStatus  Int // 响应状态码
+  responseHeaders Json? // 响应头示例
+  responseBody    Json? // 响应体示例
+
+  // 其他
+  notes     String? // 备注
+  isSuccess Boolean @default(true) // 是否成功示例
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([apiDesignId])
+  @@schema("api")
+}
+
+model ApiErrorCode {
+  id          String    @id @default(uuid())
+  apiDesignId String
+  apiDesign   ApiDesign @relation(fields: [apiDesignId], references: [id])
+
+  code        String // 错误码
+  httpStatus  Int // HTTP状态码
+  message     String // 错误信息
+  description String // 详细描述
+  solution    String? // 解决方案
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([apiDesignId, code])
+  @@index([apiDesignId])
+  @@schema("api")
+}
+
+enum ArchitectureStatus {
+  DRAFT // 草稿
+  REVIEWING // 评审中
+  APPROVED // 已批准
+  DEPRECATED // 已废弃
+
+  @@schema("architecture")
+}
+
+model SystemArchitecture {
+  id        String  @id @default(uuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id])
+
+  name     String // 架构名称
+  overview String // 技术架构总览
+  version  String // 版本号（如 1.0.0）
+  status   ArchitectureStatus @default(DRAFT) // 状态
+
+  // 架构信息
+  platforms    String[] // 支持的平台（如 web, mobile, desktop 等）
+  components   String[] // 主要组件
+  technologies String[] // 关键技术栈
+  diagrams     String? // 架构图（URL或Base64）
+  notes        String? // 备注
+
+  // 关联
+  platformArchitectures PlatformArchitecture[] // 每个平台的技术架构详情
+  changeHistories       ArchitectureChangeHistory[] // 变更历史
+
+  // 版本控制
+  versionNumber     Int                  @default(1) // 内部版本号
+  previousVersionId String? // 上一个版本ID
+  previousVersion   SystemArchitecture?  @relation("ArchitectureVersioning", fields: [previousVersionId], references: [id])
+  nextVersions      SystemArchitecture[] @relation("ArchitectureVersioning")
+
+  // 时间戳
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime? // 软删除
+
+  @@index([projectId])
+  @@index([status])
+  @@index([version])
+  @@schema("architecture")
+}
+
+model PlatformArchitecture {
+  id                   String             @id @default(uuid())
+  systemArchitectureId String
+  systemArchitecture   SystemArchitecture @relation(fields: [systemArchitectureId], references: [id])
+
+  platform    String // 平台名称（如 web, mobile, desktop 等）
+  displayName String // 显示名称
+  description String // 平台架构描述
+
+  // 架构详情
+  frontend       Json? // 前端架构描述（结构化JSON）
+  backend        Json? // 后端架构描述（结构化JSON）
+  infrastructure Json? // 基础设施描述（结构化JSON）
+
+  technologies String[] // 该平台的关键技术栈
+  components   String[] // 该平台的主要组件
+  dependencies Json? // 依赖关系（结构化JSON）
+
+  // 部署信息
+  deploymentStrategy String? // 部署策略
+  scalingStrategy    String? // 扩展策略
+
+  diagrams String? // 该平台的架构图（URL或Base64）
+  notes    String? // 备注
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([systemArchitectureId])
+  @@index([platform])
+  @@schema("architecture")
+}
+
+model ArchitectureChangeHistory {
+  id             String             @id @default(uuid())
+  architectureId String
+  architecture   SystemArchitecture @relation(fields: [architectureId], references: [id])
+
+  changeType        String // 变更类型（新增/修改/删除）
+  changeDescription String // 变更描述
+  changeReason      String // 变更原因
+  impact            String? // 影响分析
+
+  // 变更内容快照
+  beforeChange Json? // 变更前内容
+  afterChange  Json? // 变更后内容
+
+  changedAt DateTime @default(now())
+  User      User?    @relation(fields: [userId], references: [id])
+  userId    String?
+
+  @@index([architectureId])
+  @@index([changedAt])
+  @@schema("architecture")
+}
+
+enum DatabaseEngine {
+  MYSQL
+  POSTGRESQL
+  SQLITE
+  MONGODB
+  REDIS
+  ELASTICSEARCH
+
+  @@schema("database")
+}
+
+enum ColumnType {
+  // 数值类型
+  INT
+  BIGINT
+  DECIMAL
+  FLOAT
+  DOUBLE
+
+  // 字符串类型
+  VARCHAR
+  CHAR
+  TEXT
+  LONGTEXT
+
+  // 日期时间类型
+  DATE
+  TIME
+  DATETIME
+  TIMESTAMP
+
+  // 二进制类型
+  BINARY
+  VARBINARY
+  BLOB
+
+  // 其他类型
+  BOOLEAN
+  JSON
+  UUID
+  ENUM
+
+  @@schema("database")
+}
+
+enum IndexType {
+  PRIMARY // 主键索引
+  UNIQUE // 唯一索引
+  INDEX // 普通索引
+  FULLTEXT // 全文索引
+  SPATIAL // 空间索引
+
+  @@schema("database")
+}
+
+enum RelationType {
+  ONE_TO_ONE // 一对一
+  ONE_TO_MANY // 一对多
+  MANY_TO_ONE // 多对一
+  MANY_TO_MANY // 多对多
+
+  @@schema("database")
+}
+
+model DatabaseSchema {
+  id        String  @id @default(uuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id])
+
+  schemaName  String // 数据库名称
+  engine      DatabaseEngine // 数据库引擎
+  charset     String         @default("utf8mb4") // 字符集
+  collation   String         @default("utf8mb4_unicode_ci") // 排序规则
+  description String? // 描述
+
+  // 关联
+  tables DatabaseTable[] // 数据表
+
+  // 版本控制
+  version Int @default(1)
+
+  // 时间戳
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime? // 软删除
+  User      User?     @relation(fields: [userId], references: [id])
+  userId    String?
+
+  @@unique([projectId, schemaName])
+  @@index([projectId])
+  @@schema("database")
+}
+
+model DatabaseTable {
+  id       String         @id @default(uuid())
+  schemaId String
+  schema   DatabaseSchema @relation(fields: [schemaId], references: [id])
+
+  tableName   String // 表名
+  displayName String // 显示名称
+  description String? // 描述
+  engine      String? // 存储引擎（MySQL特有）
+  charset     String? // 字符集
+  collation   String? // 排序规则
+
+  // 表选项
+  autoIncrement Int? // 自增起始值
+  comment       String? // 表注释
+
+  // 关联
+  columns TableColumn[] // 列
+  indexes DatabaseIndex[] // 索引
+
+  // 关系（作为源表）
+  sourceRelations DatabaseRelation[] @relation("SourceTable")
+  // 关系（作为目标表）
+  targetRelations DatabaseRelation[] @relation("TargetTable")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schemaId, tableName])
+  @@index([schemaId])
+  @@schema("database")
+}
+
+model TableColumn {
+  id      String        @id @default(uuid())
+  tableId String
+  table   DatabaseTable @relation(fields: [tableId], references: [id])
+
+  columnName  String // 列名
+  displayName String // 显示名称
+  columnType  ColumnType // 数据类型
+  length      Int? // 长度
+  precision   Int? // 精度（小数总位数）
+  scale       Int? // 标度（小数位数）
+
+  // 约束
+  isPrimaryKey    Boolean @default(false) // 是否主键
+  isNullable      Boolean @default(true) // 是否可空
+  isUnique        Boolean @default(false) // 是否唯一
+  isAutoIncrement Boolean @default(false) // 是否自增
+
+  // 默认值和其他
+  defaultValue String? // 默认值
+  comment      String? // 注释
+  enumValues   String[] // 枚举值（当类型为ENUM时）
+
+  // 外键信息
+  isForeignKey     Boolean @default(false) // 是否外键
+  referencedTable  String? // 引用表
+  referencedColumn String? // 引用列
+  onDelete         String? // 删除时的操作
+  onUpdate         String? // 更新时的操作
+
+  // 排序
+  position Int // 列的位置
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tableId, columnName])
+  @@index([tableId])
+  @@schema("database")
+}
+
+model DatabaseIndex {
+  id      String        @id @default(uuid())
+  tableId String
+  table   DatabaseTable @relation(fields: [tableId], references: [id])
+
+  indexName String // 索引名称
+  indexType IndexType // 索引类型
+  columns   String[] // 索引列
+  isUnique  Boolean   @default(false) // 是否唯一索引
+  comment   String? // 注释
+
+  // 索引选项
+  algorithm  String? // 索引算法
+  lockOption String? // 锁选项
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tableId, indexName])
+  @@index([tableId])
+  @@schema("database")
+}
+
+model DatabaseRelation {
+  id       String @id @default(uuid())
+  schemaId String // 所属数据库
+
+  relationName String // 关系名称
+  relationType RelationType // 关系类型
+
+  // 源表信息
+  sourceTableId String
+  sourceTable   DatabaseTable @relation("SourceTable", fields: [sourceTableId], references: [id])
+  sourceColumns String[] // 源表列
+
+  // 目标表信息
+  targetTableId String
+  targetTable   DatabaseTable @relation("TargetTable", fields: [targetTableId], references: [id])
+  targetColumns String[] // 目标表列
+
+  // 约束
+  onDelete String? // 删除时的操作
+  onUpdate String? // 更新时的操作
+
+  description String? // 关系描述
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sourceTableId])
+  @@index([targetTableId])
+  @@schema("database")
+}
+
+enum DocumentType {
+  OVERVIEW // 概览
+  TECHNICAL // 技术文档
+  DESIGN // 设计文档
+  RESEARCH // 研究文档
+  USER_GUIDE // 用户指南
+  API_DOC // API文档
+  OTHER // 其他
+
+  @@schema("documentation")
+}
+
+enum DocumentStatus {
+  DRAFT // 草稿
+  REVIEWING // 评审中
+  PUBLISHED // 已发布
+  ARCHIVED // 已归档
+
+  @@schema("documentation")
+}
+
+enum DocumentVisibility {
+  PUBLIC // 公开
+  INTERNAL // 内部
+  PRIVATE // 私有
+
+  @@schema("documentation")
+}
+
+model Documentation {
+  id        String  @id @default(uuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id])
+
+  // 基本信息
+  title      String // 文档标题
+  content    String // 文档内容
+  summary    String? // 摘要
+  type       DocumentType       @default(OVERVIEW) // 文档类型
+  status     DocumentStatus     @default(DRAFT) // 状态
+  visibility DocumentVisibility @default(INTERNAL) // 可见性
+
+  // 分类和标签
+  category String? // 分类
+  tags     DocumentTag[] // 标签
+
+  // 外部链接
+  url String? // 外部文档URL
+
+  // 版本管理
+  version  String            @default("1.0.0") // 版本号
+  versions DocumentVersion[] // 历史版本
+
+  // 关联
+  comments    DocumentComment[] // 评论
+  attachments DocumentAttachment[] // 附件
+
+  // 内部版本控制
+  versionNumber Int @default(1) // 内部版本号（乐观锁）
+
+  // 时间戳
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  publishedAt DateTime? // 发布时间
+  deletedAt   DateTime? // 软删除
+  User        User?     @relation(fields: [userId], references: [id])
+  userId      String?
+
+  @@index([projectId])
+  @@index([type])
+  @@index([status])
+  @@index([category])
+  @@schema("documentation")
+}
+
+model DocumentVersion {
+  id              String        @id @default(uuid())
+  documentationId String
+  documentation   Documentation @relation(fields: [documentationId], references: [id])
+
+  version   String // 版本号
+  content   String // 版本内容
+  changeLog String // 变更说明
+
+  createdAt DateTime @default(now())
+  User      User?    @relation(fields: [userId], references: [id])
+  userId    String?
+
+  @@index([documentationId])
+  @@index([version])
+  @@schema("documentation")
+}
+
+model DocumentTag {
+  id          String  @id @default(uuid())
+  name        String  @unique // 标签名称
+  description String? // 标签描述
+  color       String? // 标签颜色
+
+  // 关联文档
+  documentations Documentation[] // 使用此标签的文档
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@schema("documentation")
+}
+
+model DocumentComment {
+  id              String        @id @default(uuid())
+  documentationId String
+  documentation   Documentation @relation(fields: [documentationId], references: [id])
+
+  content String // 评论内容
+
+  // 层级关系（支持回复）
+  parentId String?
+  parent   DocumentComment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies  DocumentComment[] @relation("CommentReplies")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  User      User?    @relation(fields: [userId], references: [id])
+  userId    String?
+
+  @@index([documentationId])
+  @@index([parentId])
+  @@schema("documentation")
+}
+
+model DocumentAttachment {
+  id              String        @id @default(uuid())
+  documentationId String
+  documentation   Documentation @relation(fields: [documentationId], references: [id])
+
+  fileName String // 文件名
+  fileUrl  String // 文件URL
+  fileSize Int // 文件大小（字节）
+  mimeType String // MIME类型
+
+  createdAt DateTime @default(now())
+  User      User?    @relation(fields: [userId], references: [id])
+  userId    String?
+
+  @@index([documentationId])
+  @@schema("documentation")
+}
+
+enum NodeType {
+  ROOT // 根节点
+  TOPIC // 主题
+  SUBTOPIC // 子主题
+  DETAIL // 详情
+  REFERENCE // 引用
+
+  @@schema("documentation")
+}
+
+model MindMap {
+  id        String  @id @default(uuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id])
+
+  title       String // 思维导图标题
+  description String? // 描述
+  overview    String // 概览说明
+
+  // 根节点
+  nodeId   String?      @unique
+  rootNode MindMapNode? @relation("RootNode", fields: [nodeId], references: [id])
+
+  // 所有节点
+  nodes MindMapNode[] @relation("MindMapNodes")
+
+  // 样式配置
+  theme  Json? // 主题配置
+  layout String @default("tree") // 布局方式
+
+  // 版本控制
+  version Int @default(1)
+
+  // 时间戳
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime? // 软删除
+  User      User?     @relation(fields: [userId], references: [id])
+  userId    String?
+
+  @@index([projectId])
+  @@schema("documentation")
+}
+
+model MindMapNode {
+  id String @id @default(uuid())
+
+  // 所属思维导图
+  mindMapId String
+  mindMap   MindMap @relation("MindMapNodes", fields: [mindMapId], references: [id])
+
+  // 作为根节点的思维导图（可选）
+  rootOfMap MindMap? @relation("RootNode")
+
+  // 节点内容
+  content  String // 节点文本
+  note     String? // 备注
+  nodeType NodeType @default(TOPIC) // 节点类型
+
+  // 层级关系
+  parentId String?
+  parent   MindMapNode?  @relation("NodeHierarchy", fields: [parentId], references: [id])
+  children MindMapNode[] @relation("NodeHierarchy")
+
+  // 位置和样式
+  position Int // 同级排序
+  expanded Boolean @default(true) // 是否展开
+  style    Json? // 节点样式
+
+  // 附加信息
+  link     String? // 链接
+  icon     String? // 图标
+  priority Int? // 优先级
+  progress Int? // 进度（0-100）
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([mindMapId])
+  @@index([parentId])
+  @@schema("documentation")
+}
+
+enum KnowledgeCategory {
+  BUSINESS // 业务知识
+  TECHNICAL // 技术知识
+  DOMAIN_SPECIFIC // 特定领域
+  GENERAL // 通用知识
+
+  @@schema("knowledge")
+}
+
+model DomainKnowledge {
+  id        String  @id @default(uuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id])
+
+  domain      String // 领域名称
+  description String // 领域描述
+  category    KnowledgeCategory // 知识分类
+
+  // 关联的知识项
+  concepts      DomainConcept[] // 概念
+  patterns      DomainPattern[] // 模式
+  bestPractices DomainBestPractice[] // 最佳实践
+  antiPatterns  DomainAntiPattern[] // 反模式
+  references    DomainReference[] // 参考资料
+
+  // 标签
+  tags String[] // 标签数组
+
+  // 版本控制
+  version Int @default(1)
+
+  // 时间戳
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime? // 软删除
+  User      User?     @relation(fields: [userId], references: [id])
+  userId    String?
+
+  @@index([projectId])
+  @@index([domain])
+  @@index([category])
+  @@schema("knowledge")
+}
+
+model DomainConcept {
+  id                String          @id @default(uuid())
+  domainKnowledgeId String
+  domainKnowledge   DomainKnowledge @relation(fields: [domainKnowledgeId], references: [id])
+
+  name            String // 概念名称
+  definition      String // 概念定义
+  examples        String[] // 示例
+  relatedConcepts String[] // 相关概念
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([domainKnowledgeId])
+  @@schema("knowledge")
+}
+
+model DomainPattern {
+  id                String          @id @default(uuid())
+  domainKnowledgeId String
+  domainKnowledge   DomainKnowledge @relation(fields: [domainKnowledgeId], references: [id])
+
+  name         String // 模式名称
+  description  String // 模式描述
+  context      String // 适用场景
+  solution     String // 解决方案
+  consequences String // 结果影响
+  examples     String[] // 示例
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([domainKnowledgeId])
+  @@schema("knowledge")
+}
+
+model DomainBestPractice {
+  id                String          @id @default(uuid())
+  domainKnowledgeId String
+  domainKnowledge   DomainKnowledge @relation(fields: [domainKnowledgeId], references: [id])
+
+  title          String // 最佳实践标题
+  description    String // 描述
+  rationale      String // 原理说明
+  implementation String // 实施方法
+  benefits       String[] // 好处
+  considerations String[] // 注意事项
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([domainKnowledgeId])
+  @@schema("knowledge")
+}
+
+model DomainAntiPattern {
+  id                String          @id @default(uuid())
+  domainKnowledgeId String
+  domainKnowledge   DomainKnowledge @relation(fields: [domainKnowledgeId], references: [id])
+
+  name         String // 反模式名称
+  description  String // 描述
+  symptoms     String[] // 症状表现
+  causes       String[] // 产生原因
+  consequences String[] // 负面影响
+  refactoring  String // 重构方案
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([domainKnowledgeId])
+  @@schema("knowledge")
+}
+
+model DomainReference {
+  id                String          @id @default(uuid())
+  domainKnowledgeId String
+  domainKnowledge   DomainKnowledge @relation(fields: [domainKnowledgeId], references: [id])
+
+  title       String // 标题
+  type        String // 类型（书籍、文章、视频等）
+  url         String? // 链接
+  author      String? // 作者
+  publishDate DateTime? // 发布日期
+  summary     String? // 摘要
+
+  createdAt DateTime @default(now())
+
+  @@index([domainKnowledgeId])
+  @@schema("knowledge")
+}
+
+model Project {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // 用户关联
+  createdBy String? // 创建者ID
+  creator   User?           @relation(fields: [createdBy], references: [id])
+  members   ProjectMember[] // 项目成员
+
+  tasks                 Task[]
+  documentation         Documentation[]
+  MindMap               MindMap[]
+  Sprint                Sprint[]
+  Requirement           Requirement[]
+  DomainKnowledge       DomainKnowledge[]
+  SystemArchitecture    SystemArchitecture[]
+  roadmaps              Roadmap[]
+  ApiDesign             ApiDesign[]
+  team                  Team[]
+  Agent                 Agent[]
+  AgentWorklog          AgentWorklog[]
+  DatabaseSchema        DatabaseSchema[]
+  RequirementQuestion   RequirementQuestion[]
+  RequirementAttachment RequirementAttachment[]
+
+  @@schema("project")
+}
+
+enum RequirementType {
+  FUNCTIONAL // 功能需求
+  NON_FUNCTIONAL // 非功能需求
+  BUSINESS // 业务需求
+  TECHNICAL // 技术需求
+
+  @@schema("requirements")
+}
+
+enum RequirementPriority {
+  HIGH // 高优先级
+  MEDIUM // 中优先级
+  LOW // 低优先级
+
+  @@schema("requirements")
+}
+
+enum RequirementStatus {
+  DRAFT // 草稿
+  REVIEWING // 评审中
+  CONFIRMED // 已确认
+  IMPLEMENTED // 已实现
+  DEPRECATED // 已废弃
+
+  @@schema("requirements")
+}
+
+enum RequirementSource {
+  CUSTOMER // 客户
+  PRODUCT // 产品
+  TECHNICAL // 技术
+  INTERNAL // 内部
+
+  @@schema("requirements")
+}
+
+model Requirement {
+  id        String              @id @default(uuid())
+  projectId String
+  project   Project             @relation(fields: [projectId], references: [id])
+  title     String // 需求标题
+  content   String // 需求详细内容
+  type      RequirementType // 需求类型
+  priority  RequirementPriority // 优先级
+  status    RequirementStatus   @default(DRAFT) // 状态
+  source    RequirementSource // 需求来源
+
+  // 层级关系
+  parentId String?
+  parent   Requirement?  @relation("RequirementHierarchy", fields: [parentId], references: [id])
+  children Requirement[] @relation("RequirementHierarchy")
+
+  // 关联
+  questions   RequirementQuestion[] // 相关问题
+  attachments RequirementAttachment[] // 附件
+
+  // 版本控制
+  version Int @default(1) // 版本号
+
+  // 时间戳
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime? // 软删除
+  User      User?     @relation(fields: [userId], references: [id])
+  userId    String?
+
+  @@index([projectId])
+  @@index([status])
+  @@index([priority])
+  @@schema("requirements")
+}
+
+enum QuestionStatus {
+  TODO // 待处理
+  IN_PROGRESS // 处理中
+  DONE // 已完成
+
+  @@schema("requirements")
+}
+
+enum QuestionPriority {
+  URGENT // 紧急
+  HIGH // 高
+  MEDIUM // 中
+  LOW // 低
+
+  @@schema("requirements")
+}
+
+model RequirementQuestion {
+  id            String      @id @default(uuid())
+  projectId     String // 关联项目
+  project       Project     @relation(fields: [projectId], references: [id])
+  requirementId String // 关联需求
+  requirement   Requirement @relation(fields: [requirementId], references: [id])
+
+  question  String // 问题内容
+  answer    String? // 答案
+  status    QuestionStatus   @default(TODO) // 状态
+  priority  QuestionPriority @default(MEDIUM) // 优先级
+  clarified Boolean          @default(false) // 是否已澄清
+
+  agentId String // 关联agent
+  agent   Agent  @relation("RequirementQuestionAgent", fields: [agentId], references: [id])
+
+  // 时间戳
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  answeredAt DateTime? // 回答时间
+
+  @@index([requirementId])
+  @@index([status])
+  @@schema("requirements")
+}
+
+model RequirementAttachment {
+  id            String      @id @default(uuid())
+  projectId     String // 关联项目
+  project       Project     @relation(fields: [projectId], references: [id])
+  requirementId String // 关联需求
+  requirement   Requirement @relation(fields: [requirementId], references: [id])
+
+  fileName String // 文件名
+  fileUrl  String // 文件URL
+  fileSize Int // 文件大小（字节）
+  mimeType String // MIME类型
+
+  createdAt DateTime @default(now())
+  User      User?    @relation(fields: [userId], references: [id])
+  userId    String?
+
+  @@index([requirementId])
+  @@schema("requirements")
+}
+
+model Roadmap {
+  id          String   @id @default(uuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id])
+  name        String
+  description String?
+  startDate   DateTime
+  endDate     DateTime
+  status      String   @default("planning") // planning, active, completed, cancelled
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  milestones Milestone[]
+  versions   Version[]
+
+  @@schema("roadmap")
+}
+
+model Milestone {
+  id          String   @id @default(uuid())
+  roadmapId   String
+  roadmap     Roadmap  @relation(fields: [roadmapId], references: [id])
+  name        String
+  description String?
+  targetDate  DateTime
+  status      String   @default("planned") // planned, in_progress, completed, delayed
+  priority    String   @default("medium") // low, medium, high, critical
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  features Feature[]
+
+  @@schema("roadmap")
+}
+
+model Version {
+  id          String    @id @default(uuid())
+  roadmapId   String
+  roadmap     Roadmap   @relation(fields: [roadmapId], references: [id])
+  name        String // 版本名称，如 v1.0.0
+  description String?
+  releaseDate DateTime?
+  status      String    @default("planned") // planned, in_development, testing, released, deprecated
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  features Feature[]
+
+  @@schema("roadmap")
+}
+
+model Feature {
+  id          String     @id @default(uuid())
+  milestoneId String?
+  milestone   Milestone? @relation(fields: [milestoneId], references: [id])
+  versionId   String?
+  version     Version?   @relation(fields: [versionId], references: [id])
+  name        String
+  description String?
+  status      String     @default("planned") // planned, in_development, testing, completed, cancelled
+  priority    String     @default("medium") // low, medium, high, critical
+  effort      String? // 工作量估算
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  tasks Task[]
+
+  @@schema("roadmap")
+}
+
+model Sprint {
+  id        String   @id @default(uuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id])
+  name      String
+  startDate DateTime
+  endDate   DateTime
+  goal      String
+  status    String   @default("todo") // todo, in_progress, done
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Task      Task[]
+
+  @@schema("scrum")
+}
+
+model Task {
+  id           String         @id @default(uuid())
+  projectId    String
+  project      Project        @relation(fields: [projectId], references: [id])
+  sprintId     String
+  sprint       Sprint         @relation(fields: [sprintId], references: [id])
+  teamId       String
+  team         Team           @relation(fields: [teamId], references: [id])
+  title        String
+  content      String?
+  status       String         @default("todo") // todo, in_progress, testing, done
+  dueDate      DateTime?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  feature      Feature?       @relation(fields: [featureId], references: [id])
+  featureId    String?
+  AgentTask    AgentTask[]
+  AgentWorklog AgentWorklog[]
+
+  @@schema("scrum")
+}
+
+model Team {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  projectId   String   @default("")
+  project     Project  @relation(fields: [projectId], references: [id])
+  tasks       Task[]
+  agents      Agent[]
+
+  @@schema("team")
+}
+
+model User {
+  id          String    @id @default(uuid())
+  email       String    @unique
+  username    String    @unique
+  password    String // 加密后的密码
+  name        String?
+  avatar      String?
+  role        UserRole  @default(USER)
+  isActive    Boolean   @default(true)
+  lastLoginAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // 关联
+  projects                  Project[] // 用户创建的项目
+  projectMembers            ProjectMember[] // 用户参与的项目
+  sessions                  Session[] // 用户会话
+  auditLogs                 AuditLog[] // 审计日志
+  DomainKnowledge           DomainKnowledge[]
+  DatabaseSchema            DatabaseSchema[]
+  Requirement               Requirement[]
+  RequirementAttachment     RequirementAttachment[]
+  Documentation             Documentation[]
+  DocumentVersion           DocumentVersion[]
+  DocumentComment           DocumentComment[]
+  DocumentAttachment        DocumentAttachment[]
+  MindMap                   MindMap[]
+  ArchitectureChangeHistory ArchitectureChangeHistory[]
+
+  @@schema("user")
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  token     String   @unique
+  ipAddress String?
+  userAgent String?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([token])
+  @@schema("user")
+}
+
+model ProjectMember {
+  id          String      @id @default(uuid())
+  projectId   String
+  project     Project     @relation(fields: [projectId], references: [id])
+  userId      String
+  user        User        @relation(fields: [userId], references: [id])
+  role        ProjectRole @default(MEMBER)
+  permissions String[] // 具体权限列表
+  joinedAt    DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@unique([projectId, userId])
+  @@index([projectId])
+  @@index([userId])
+  @@schema("user")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id])
+  action     String // 操作类型
+  resource   String // 资源类型
+  resourceId String? // 资源ID
+  details    Json? // 详细信息
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([resource])
+  @@index([createdAt])
+  @@schema("user")
+}
+
+enum UserRole {
+  ADMIN
+  USER
+  GUEST
+
+  @@schema("user")
+}
+
+enum ProjectRole {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
+
+  @@schema("user")
+}
+
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../src/generated/prisma"
+  previewFeatures = ["multiSchema"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["agent", "api", "architecture", "database", "documentation", "knowledge", "project", "requirements", "roadmap", "scrum", "team", "user"]
+}

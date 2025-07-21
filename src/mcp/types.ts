@@ -100,7 +100,14 @@ export interface UpdateRequirementArgs {
   requirementId: string;
   title?: string;
   description?: string;
-  status?: 'draft' | 'reviewing' | 'approved' | 'implementing' | 'testing' | 'completed' | 'cancelled';
+  status?:
+    | 'draft'
+    | 'reviewing'
+    | 'approved'
+    | 'implementing'
+    | 'testing'
+    | 'completed'
+    | 'cancelled';
   priority?: 'critical' | 'high' | 'medium' | 'low';
 }
 

@@ -748,7 +748,15 @@ export const toolsDefinition = [
         },
         status: {
           type: 'string',
-          enum: ['draft', 'reviewing', 'approved', 'implementing', 'testing', 'completed', 'cancelled'],
+          enum: [
+            'draft',
+            'reviewing',
+            'approved',
+            'implementing',
+            'testing',
+            'completed',
+            'cancelled',
+          ],
           description: '需求状态',
         },
         priority: {

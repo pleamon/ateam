@@ -1,4 +1,4 @@
-import { PrismaClient } from '../generated/prisma';
+import { PrismaClient } from '@generated/prisma';
 
 const prisma = new PrismaClient();
 
@@ -20,24 +20,41 @@ async function seedData() {
       data: {
         name: '开发团队',
         description: '负责系统开发和维护',
+        projectId: project.id,
       },
     });
     console.log('✅ 团队创建成功:', team.name);
 
-    // 创建团队成员
-    const teamMember = await prisma.teamMember.create({
+    // 创建团队Agent
+    const agent = await prisma.agent.create({
       data: {
+        name: '开发团队Agent',
+        projectId: project.id,
         teamId: team.id,
         responsibilities: ['后端开发', 'API设计'],
         skills: ['TypeScript', 'Fastify', 'Prisma'],
       },
     });
-    console.log('✅ 团队成员创建成功');
+    console.log('✅ 团队Agent创建成功');
+
+    // 创建Sprint
+    const sprint = await prisma.sprint.create({
+      data: {
+        projectId: project.id,
+        name: 'Sprint 1',
+        startDate: new Date('2024-01-01'),
+        endDate: new Date('2024-01-31'),
+        goal: '完成基础功能开发',
+        status: 'in_progress',
+      },
+    });
+    console.log('✅ Sprint创建成功:', sprint.name);
 
     // 创建任务
     const task = await prisma.task.create({
       data: {
         projectId: project.id,
+        sprintId: sprint.id,
         teamId: team.id,
         title: '实现用户认证功能',
         content: '使用JWT实现用户登录和注册功能',
@@ -47,46 +64,35 @@ async function seedData() {
     });
     console.log('✅ 任务创建成功:', task.title);
 
-    // 分配任务给团队成员
-    await prisma.teamMemberTask.create({
+    // 分配任务给Agent
+    await prisma.agentTask.create({
       data: {
-        teamMemberId: teamMember.id,
+        agentId: agent.id,
         taskId: task.id,
-        status: 'in_progress',
       },
     });
     console.log('✅ 任务分配成功');
-
-    // 创建Sprint
-    const sprint = await prisma.sprint.create({
-      data: {
-        projectId: project.id,
-        name: 'Sprint 1 - 基础功能',
-        startDate: new Date('2024-01-01'),
-        endDate: new Date('2024-01-15'),
-        goal: '完成用户认证和基础项目管理功能',
-        status: 'in_progress',
-      },
-    });
-    console.log('✅ Sprint创建成功:', sprint.name);
 
     // 创建文档
     const documentation = await prisma.documentation.create({
       data: {
         projectId: project.id,
-        teamId: team.id,
-        name: 'API设计文档',
+        title: 'API设计文档',
         content: '详细的API接口设计说明',
-        type: 'technical',
+        type: 'TECHNICAL',
       },
     });
-    console.log('✅ 文档创建成功:', documentation.name);
+    console.log('✅ 文档创建成功:', documentation.title);
 
     // 创建需求
     const requirement = await prisma.requirement.create({
       data: {
         projectId: project.id,
+        title: '多用户协作需求',
         content: '系统需要支持多用户协作',
+        type: 'FUNCTIONAL',
+        priority: 'HIGH',
+        source: 'CUSTOMER',
       },
     });
     console.log('✅ 需求创建成功');
@@ -96,10 +102,9 @@ async function seedData() {
       data: {
         projectId: project.id,
         domain: '项目管理',
-        concepts: ['敏捷开发', 'Scrum', '看板'],
-        commonPatterns: ['用户故事', '任务分解', '迭代开发'],
-        bestPractices: ['持续集成', '代码审查', '测试驱动开发'],
-        antiPatterns: ['瀑布式开发', '过度设计', '技术债务'],
+        description: '项目管理相关的领域知识',
+        category: 'BUSINESS',
+        tags: ['敏捷开发', 'Scrum', '看板'],
       },
     });
     console.log('✅ 领域知识创建成功:', domainKnowledge.domain);
